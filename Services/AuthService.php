@@ -3,6 +3,7 @@
 namespace Services;
 
 use Core\Auth\AuthManager;
+use Core\Auth\UserAccount;
 use Helpers\Session;
 
 /**
@@ -12,6 +13,7 @@ use Helpers\Session;
 class AuthService extends AuthManager
 {
     private const SESSION_UID = 'omgo_auth_uid';
+    private const SESSION_IMPERSONATOR = 'omgo_auth_impersonator';
 
     public function isAuthenticated(): bool
     {
@@ -76,8 +78,86 @@ class AuthService extends AuthManager
     public function logout(): void
     {
         Session::clearValue(self::SESSION_UID);
+        Session::clearValue(self::SESSION_IMPERSONATOR);
         $this->user = null;
         $this->initialized = true;
+    }
+
+    public function isImpersonating(): bool
+    {
+        return $this->getImpersonatorId() !== null;
+    }
+
+    public function getImpersonatorId(): ?int
+    {
+        $id = (int) Session::getValue(self::SESSION_IMPERSONATOR);
+
+        return $id > 0 ? $id : null;
+    }
+
+    /**
+     * Легаси: панель входа видна при tblusers.role &lt; 3.
+     */
+    public function canStartImpersonation(): bool
+    {
+        if ($this->isImpersonating()) {
+            return false;
+        }
+
+        $user = $this->getUser();
+        if ($user === null) {
+            return false;
+        }
+
+        $role = (int) ($user['role'] ?? 0);
+
+        return $role > 0 && $role < 3;
+    }
+
+    public function loginAsUser(int $targetUserId): bool
+    {
+        if (!$this->canStartImpersonation()) {
+            return false;
+        }
+
+        $currentId = $this->getUserId();
+        if ($currentId === null || $currentId === $targetUserId || $targetUserId <= 0) {
+            return false;
+        }
+
+        $target = $this->loadAccount($targetUserId);
+        if ($target === null) {
+            return false;
+        }
+
+        Session::setValue(self::SESSION_IMPERSONATOR, $currentId);
+        Session::setValue(self::SESSION_UID, $targetUserId);
+        $this->user = $target;
+        $this->initialized = true;
+
+        return true;
+    }
+
+    public function exitImpersonation(): bool
+    {
+        $initiator = $this->getImpersonatorId();
+        if ($initiator === null) {
+            return false;
+        }
+
+        $account = $this->loadAccount($initiator);
+        Session::clearValue(self::SESSION_IMPERSONATOR);
+        if ($account === null) {
+            $this->logout();
+
+            return false;
+        }
+
+        Session::setValue(self::SESSION_UID, $initiator);
+        $this->user = $account;
+        $this->initialized = true;
+
+        return true;
     }
 
     private function findAccountByLogin(string $username): ?array
@@ -87,20 +167,103 @@ class AuthService extends AuthManager
             return null;
         }
 
-        foreach (['login', 'email', 'phone'] as $field) {
-            $row = $this->db->reset()
-                ->select(['*'])
-                ->from('tblusers')
-                ->where([$field => $username])
-                ->getOne();
+        foreach ($this->loginCandidates($username) as $candidate) {
+            foreach (['login', 'email', 'phone'] as $field) {
+                $row = $this->db->reset()
+                    ->select(['*'])
+                    ->from('tblusers')
+                    ->where([$field => $candidate])
+                    ->getOne();
 
-            $account = $this->normalizeAccount($row);
-            if ($account !== null) {
-                return $account;
+                $account = $this->normalizeAccount($row);
+                if ($account !== null) {
+                    return $account;
+                }
             }
         }
 
         return null;
+    }
+
+    /**
+     * Смена пароля в формате легаси: salt + base64(sha1(pass.salt)).
+     * $activate — как AddUser при восстановлении: status становится 1.
+     */
+    public function setPassword(int $userId, string $password, bool $activate = false): bool
+    {
+        if ($userId <= 0 || $password === '') {
+            return false;
+        }
+
+        $salt = $this->generateSalt();
+        $passwd = $this->generateDbPassword($password, $salt);
+        $sql = 'UPDATE `tblusers` SET `salt` = ?, `passwd` = ?';
+        $params = [$salt, $passwd];
+        if ($activate) {
+            $sql .= ', `status` = 1';
+        }
+        $sql .= ' WHERE `id` = ?';
+        $params[] = $userId;
+        $stmt = $this->db->execute($sql, $params);
+
+        return $stmt instanceof \PDOStatement && $stmt->rowCount() > 0;
+    }
+
+    /**
+     * Новая учётка с явным id = t_users.cat (FK tblusers.id → t_users.cat).
+     * status 0 — до подтверждения администратором вход закрыт.
+     */
+    public function insertCredentials(int $id, string $email, string $phone, string $password, int $role, int $status): bool
+    {
+        if ($id <= 0 || $email === '' || $password === '') {
+            return false;
+        }
+
+        $salt = $this->generateSalt();
+        $passwd = $this->generateDbPassword($password, $salt);
+        $hash = substr(sha1($salt . uniqid('', true)), 0, 32);
+        $now = time();
+        $stmt = $this->db->execute(
+            'INSERT INTO `tblusers` (`id`, `login`, `email`, `phone`, `passwd`, `salt`, `hash`, `regdate`, `visdate`, `status`, `role`)
+             VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [$id, $email, $phone, $passwd, $salt, $hash, $now, $now, $status, $role]
+        );
+
+        return $stmt instanceof \PDOStatement;
+    }
+
+    /**
+     * Логин как в легаси: строка как есть и телефон 7/8 + 10 цифр.
+     *
+     * @return list<string>
+     */
+    private function loginCandidates(string $username): array
+    {
+        $username = trim($username);
+        if ($username === '') {
+            return [];
+        }
+
+        $list = [$username];
+        if (strpos($username, '@') !== false) {
+            return $list;
+        }
+
+        $digits = preg_replace('/\D+/', '', $username);
+        if (!is_string($digits)) {
+            return $list;
+        }
+
+        if (strlen($digits) === 11) {
+            $tail = substr($digits, 1, 10);
+            $list[] = '7' . $tail;
+            $list[] = '8' . $tail;
+        } elseif (strlen($digits) === 10) {
+            $list[] = '7' . $digits;
+            $list[] = '8' . $digits;
+        }
+
+        return array_values(array_unique($list));
     }
 
     private function loadAccount(int $id): ?array
@@ -128,7 +291,7 @@ class AuthService extends AuthManager
             return null;
         }
 
-        return $row;
+        return (new UserAccount($row))->toArray();
     }
 
     private function passwordMatches(array $row, string $password): bool

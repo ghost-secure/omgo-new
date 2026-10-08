@@ -41,5 +41,17 @@ return [
         'hooks.manager' => function ($c) {
             return $c->get(\Core\Hooks\HookManager::class);
         },
+
+        \Services\RoleService::class => function ($c) {
+            return new \Services\RoleService();
+        },
+
+        \Services\AnalysisService::class => function ($c) {
+            return new \Services\AnalysisService($c->get(\Core\Database\QueryBuilder::class));
+        },
+
+        'mailer' => function ($c) {
+            return new \Services\MailService();
+        },
     ],
 ];

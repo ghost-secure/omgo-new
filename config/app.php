@@ -25,9 +25,16 @@ return [
         'login_url' => '/login',
         'public_paths' => [
             '/login',
+            '/auth',
+            '/reg',
+            '/recover',
             '/jsapi/csrf',
+            '/jsapi/form/auth',
             '/jsapi/form.auth',
+            '/jsapi/form/reg',
+            '/jsapi/form/recover',
             '/jsapi/auth.logout',
+            '/jsapi/auth/logout',
         ],
         'manager_roles' => [1, 2, 3, 4],
         'unique_fields' => ['login', 'email', 'phone'],
@@ -36,7 +43,7 @@ return [
     'menu' => [
         'admin_code' => 'admin_left',
         'catalog_prefix' => '/manager',
-        'skip_mapurls' => ['add', 'login', 'auth'],
+        'skip_mapurls' => ['add', 'login', 'auth', 'reg', 'recover'],
     ],
 
     'secure' => [

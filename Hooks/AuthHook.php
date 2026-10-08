@@ -66,8 +66,11 @@ class AuthHook implements HookInterface
 
         if ($gate === 'all' || strpos($path, '/manager') === 0) {
             if (!in_array($role, $allowed, true)) {
-                $auth->logout();
-                return $this->redirectToLogin($request, $loginUrl);
+                $impersonating = method_exists($auth, 'isImpersonating') && $auth->isImpersonating();
+                if (!$impersonating) {
+                    $auth->logout();
+                    return $this->redirectToLogin($request, $loginUrl);
+                }
             }
         }
 
