@@ -79,7 +79,7 @@
       "layer": "project",
       "role": "topic",
       "topics": ["адреса", "паспорт врача", "mant_pacient", "GUID"],
-      "summary": "/ и /manager/ ведут на /manager/mant_pacient/. Паспорт врача — /manager/doctor/{cat}/. GUID анализа намечен, не включён."
+      "summary": "/ и /manager/ ведут на /manager/mant_pacient/. Паспорт врача — /manager/doctor/{cat}/. Номера страниц — Helpers\\Page. GUID анализа намечен, не включён."
     },
     {
       "path": "project/readme/legacy-wf.md",

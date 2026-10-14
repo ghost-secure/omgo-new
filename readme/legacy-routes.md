@@ -13,13 +13,15 @@
 | `/` | 302 на `/manager/mant_pacient/` |
 | `/manager/` | 302 на `/manager/mant_pacient/` |
 
-Список пациентов — узел каталога 54, `mapurl = mant_pacient`, php `gen/t_pacient.php`. Гость до стратегии не доходит: `AuthHook` (`auth.gate=all`) уводит на `/login`.
+Список пациентов — страница `Helpers\Page::PACIENT_LIST`, `mapurl = mant_pacient`, php `gen/t_pacient.php`. Гость до стратегии не доходит: `AuthHook` (`auth.gate=all`) уводит на `/login`.
+
+Номера страниц (`catalog.id`) лежат в `Helpers\Page`, не в стратегиях. `Core\Page\Page` — объект маршрута, не этот список.
 
 ## Паспорт врача
 
 `/manager/doctor/{cat}/` — числовой `t_users.cat` (в легаси переменная называлась `doctor_guid`).
 
-Узел каталога 71, `mapurl = doctor`, php `web/doctor-passport.php`, шаблон `light.php`. `catalog.status = 0`: в меню пункт не попадает, голый `/manager/doctor/` иерархия не открывает. Стратегия отдаёт узел только если id есть в `t_users`. Параметр: `doctor_id`.
+Страница `Helpers\Page::DOCTOR`, `mapurl = doctor`, php `web/doctor-passport.php`, шаблон `light.php`. `catalog.status = 0`: в меню пункт не попадает, голый `/manager/doctor/` иерархия не открывает. Стратегия отдаёт страницу только если id есть в `t_users` и это `Page::DOCTOR`. Параметр: `doctor_id`.
 
 Страница — два DynBlock:
 
@@ -40,16 +42,22 @@
 
 `match()` эти адреса не берёт. GUID — `t_analysis.varc_guid`. Когда появятся php-файлы, тот же приём: три сегмента (или два у PDF), страница каталога, параметр в attributes.
 
-| URL | Узел | php | Параметр | Кто заполняет |
-|-----|------|-----|----------|----------------|
-| `/manager/pacient/{guid}/` | 57 | `form/pacient.php` | `analysis_guid` | врач, карточка пациента |
-| `/manager/analysis/{guid}/` | 58 | `form/analysis.php` | `analysis_guid` | лаборатория, форма анализа |
-| `/manager/passport/{guid}/` | 65 | `web/passport.php` | `passport_guid` | паспорт анализа |
-| `/pdf/{guid}/` | 69 | `form/pdf.php` | `analysis_guid` | PDF |
+| URL | Страница | php | Параметр | Кто заполняет |
+|-----|----------|-----|----------|----------------|
+| `/manager/pacient/{guid}/` | `Page::PACIENT` | `form/pacient.php` | `analysis_guid` | врач, карточка пациента |
+| `/manager/analysis/{guid}/` | `Page::ANALYSIS` | `form/analysis.php` | `analysis_guid` | лаборатория, форма анализа |
+| `/manager/passport/{guid}/` | `Page::PASSPORT` | `web/passport.php` | `passport_guid` | паспорт анализа |
+| `/pdf/{guid}/` | `Page::PDF` | `form/pdf.php` | `analysis_guid` | PDF |
 
-Узлы 57, 58, 65, 69 в каталоге со `status = 0`. Карта в коде: `LegacyUrlStrategy::plannedGuidRoutes()`.
+Эти страницы в каталоге со `status = 0`. Карта в коде: `LegacyUrlStrategy::plannedGuidRoutes()`.
 
 ## История логики
+
+### 2026-10-14 — номера страниц в Helpers\Page
+
+- **Тип:** новая логика
+- **Было:** в стратегии GUID лежали числа `catalog.id`
+- **Стало:** константы `Helpers\Page`; в карте маршрутов ключ `page`
 
 ### 2026-10-11 — тот же грид на списке пациентов
 
