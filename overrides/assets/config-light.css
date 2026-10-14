@@ -1,0 +1,266 @@
+/*
+ * Светлая тема кабинета OMGO.
+ * Ядро грузит этот файл после config-default.css (core.js → project/overrides/assets/config-light.css).
+ * Селектор html.theme-light — чтобы токены перебили поздний :root из core/assets/config.css.
+ *
+ * Легаси-эталон палитры: omgo-lu/project/web/css/lu-original.css (--main-color, --sidebar-bg).
+ */
+
+html.theme-light {
+    --color-primary: #ff7f22;
+    --color-primary-light: #ff9a4d;
+    --color-primary-dark: #e56a12;
+    --color-primary-rgb: 255, 127, 34;
+
+    --color-blue: #2574bb;
+    --color-blue-rgb: 37, 116, 187;
+    /* Мнемоники списка пациентов — как в легаси.
+       uikit.css (его подключает lu-original.css): --color-* и --color-bg-*.
+       lu-original.css :root: --pink. Класс .bg-pink читает именно --pink.
+       В разметке hex нет: строка var(--color-bg-blue), бейдж класс bg-deepgreen. */
+    --color-green: #00bc8b;
+    --color-green-rgb: 0, 188, 139;
+    --color-red: #ef3737;
+    --color-red-rgb: 239, 55, 55;
+    --color-yellow: #ef7f1a;
+    --color-yellow-rgb: 239, 127, 26;
+    --color-orange: #ef7f1a;
+    --color-deepgreen: #013220;
+    --color-purple: #aa71cb;
+    --pink: #e83e8c;
+    --color-bg-green: #e6f2ed;
+    --color-bg-blue: #d7e8f7;
+    --color-bg-yellow: #fffaf0;
+    --color-bg-red: #ffefed;
+    --color-bg-lgrey: #f4fafb;
+
+    --tooltip-bg: rgba(0, 0, 0, 0.88);
+    --tooltip-color: #ffffff;
+    --tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+    --sidebar-menu-active-color: #ff7f22;
+}
+
+/* Лого: десктоп 166×56, мобильный 130×40 + крестик (легаси logo.php) */
+html.theme-light .admin-layout > .brand {
+    background-color: #000;
+    border-bottom-color: #222;
+    border-right-color: #222;
+    color: #fff;
+    gap: var(--space-sm);
+}
+
+html.theme-light .brand-logo {
+    display: flex;
+    align-items: center;
+    line-height: 0;
+}
+
+html.theme-light .brand-logo__mobile,
+html.theme-light .brand-sidebar-close {
+    display: none;
+}
+
+html.theme-light .brand-sidebar-close {
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #8c94a5;
+    cursor: pointer;
+}
+
+html.theme-light .brand-sidebar-close:hover {
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    html.theme-light .brand-logo__desktop {
+        display: none;
+    }
+
+    html.theme-light .brand-logo__mobile {
+        display: block;
+    }
+
+    html.theme-light .brand-sidebar-close {
+        display: inline-flex;
+    }
+}
+
+.admin-app-wrapper.sidebar-collapsed .admin-layout > .brand .brand-logo svg {
+    width: 48px;
+    height: 16px;
+}
+
+/* Сайдбар — чёрный, как легаси --sidebar-bg */
+html.theme-light .sidebar,
+html.theme-light .admin-sidebar {
+    background-color: #000;
+    border-right-color: #222;
+}
+
+html.theme-light .sidebar .menu-label {
+    color: #8c94a5;
+}
+
+html.theme-light .sidebar .nav-link,
+html.theme-light .sidebar .sidebar-tools .nav-link {
+    color: #dddfe4;
+}
+
+html.theme-light .sidebar .nav-link:hover,
+html.theme-light .sidebar .sidebar-tools .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+html.theme-light .sidebar .nav-link.active {
+    background-color: transparent;
+    color: var(--color-primary);
+}
+
+html.theme-light .sidebar .nav-icon,
+html.theme-light .sidebar .nav-link .nav-item__icon {
+    color: inherit;
+}
+
+html.theme-light .sidebar .chevron {
+    stroke: #8c94a5;
+}
+
+html.theme-light .sidebar .chevron svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+html.theme-light .sidebar .sub-menu {
+    border-left-color: #333;
+}
+
+/* Ядро: .nav-link.expanded + .sub-menu { max-height: 500px; overflow: visible }.
+   Лишнее вылезает поверх следующего пункта. Здесь высота по содержимому. */
+html.theme-light .sidebar .nav-link.expanded + .sub-menu {
+    max-height: none;
+    padding-top: 2px;
+    padding-bottom: 4px;
+}
+
+html.theme-light .sidebar .sub-menu > .nav-link {
+    padding-top: calc((var(--space-sm) + 0.125rem) / 2);
+    padding-bottom: calc((var(--space-sm) + 0.125rem) / 2);
+    margin-bottom: calc(var(--space-xs) * 0.25);
+}
+
+html.theme-light .sidebar .sub-link {
+    color: #8c94a5;
+    padding-top: calc(var(--space-sm) / 2);
+    padding-bottom: calc(var(--space-sm) / 2);
+    margin-bottom: calc(var(--space-xs) * 0.125);
+}
+
+html.theme-light .sidebar .sub-link:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+html.theme-light .sidebar .sub-link.active {
+    color: var(--color-primary);
+    background-color: transparent;
+}
+
+html.theme-light .sidebar .sub-link.active::before {
+    box-shadow: 0 0 0 4px #000;
+}
+
+html.theme-light .admin-sidebar__footer,
+html.theme-light .sidebar-tools {
+    border-top-color: #222 !important;
+}
+
+/* Бегунок меню: чуть светлее чёрного фона. Ядро красит thumb в --color-lgrey (#d5d5d5). */
+html.theme-light .sidebar .sidebar-content {
+    scrollbar-width: thin;
+    scrollbar-color: #333333 transparent;
+}
+
+html.theme-light .sidebar .sidebar-content::-webkit-scrollbar-thumb {
+    background: #333333;
+}
+
+html.theme-light .sidebar .sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: #4a4a4a;
+}
+
+/* Горячая линия в шапке. Легаси content.htm: колонка, телефон синий, на узком экране блок скрыт (.d-mb-none). */
+html.theme-light .header-hotline {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-width: 0;
+    line-height: 1.2;
+}
+
+html.theme-light .header-hotline__phone {
+    color: var(--color-blue);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+html.theme-light .header-hotline__hours {
+    color: #5c6570;
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    html.theme-light .header-hotline {
+        display: none;
+    }
+}
+
+/* Строка списка анализов: фон ячейки из --row-tone (var(--color-bg-*)).
+   Sticky-колонки ядра красят фон !important, поэтому здесь тоже. */
+html.theme-light table.admin-table tbody tr.row-tone > td,
+html.theme-light .table-container table tbody tr.row-tone > td {
+    background-color: var(--row-tone);
+}
+
+html.theme-light table.admin-table tbody tr.row-tone > td.sticky-column-start,
+html.theme-light table.admin-table tbody tr.row-tone > td.sticky-column-end,
+html.theme-light .table-container table tbody tr.row-tone > td.sticky-column-start,
+html.theme-light .table-container table tbody tr.row-tone > td.sticky-column-end {
+    background-color: var(--row-tone) !important;
+}
+
+/* Сплошной цвет мнемоники. В ядре уже есть bg-green/blue/yellow/red. */
+html.theme-light .bg-deepgreen { background-color: var(--color-deepgreen); }
+html.theme-light .bg-purple { background-color: var(--color-purple); }
+html.theme-light .bg-lgrey { background-color: var(--color-bg-lgrey); }
+html.theme-light .bg-pink { background-color: var(--pink); }
+
+/* Образец легенды — сплошная мнемоника, не бледный фон строки. */
+html.theme-light .dynblock-status-legend__swatch.bg-green { background-color: var(--color-green); }
+html.theme-light .dynblock-status-legend__swatch.bg-blue { background-color: var(--color-blue); }
+html.theme-light .dynblock-status-legend__swatch.bg-yellow { background-color: var(--color-yellow); }
+html.theme-light .dynblock-status-legend__swatch.bg-red { background-color: var(--color-red); }
+html.theme-light .dynblock-status-legend__swatch.bg-lgrey { background-color: var(--color-lgrey); }
+
+html.theme-light .analysis-type-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 0.2rem 0.55rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    color: var(--color-white);
+}
