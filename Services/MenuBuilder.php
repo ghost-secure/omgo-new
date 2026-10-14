@@ -11,8 +11,6 @@ use Core\Database\QueryBuilder;
  */
 class MenuBuilder
 {
-    private const REMIX_ICON_CDN_PREFIX = 'https://cdn.jsdelivr.net/npm/remixicon@4.9.1/icons/';
-
     private QueryBuilder $db;
 
     public function __construct()
@@ -52,9 +50,11 @@ class MenuBuilder
             }
 
             $pages = $this->loadCatalogMap($normalized);
+            $tree = $this->buildTree($normalized, $pages);
+            RemixIconCache::warmTree($tree);
             return [
                 'code' => $code,
-                'nodes' => $this->buildTree($normalized, $pages),
+                'nodes' => $tree,
             ];
         } catch (\Throwable $e) {
             return ['code' => $code, 'nodes' => []];
@@ -162,7 +162,7 @@ class MenuBuilder
         }
 
         // 1) Нормальный полный URL
-        $icon = str_replace(self::REMIX_ICON_CDN_PREFIX, '', $icon);
+        $icon = str_replace(RemixIconCache::CDN_PREFIX, '', $icon);
 
         // 2) Универсально: если есть "/icons/", забираем хвост после него
         $iconsPos = strpos($icon, '/icons/');

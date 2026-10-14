@@ -7,8 +7,8 @@ use Core\Router\RouteMatch;
 use Core\Router\RouteStrategy;
 
 /**
- * Корень сайта. На test здесь витрина (slug home / виртуальная страница).
- * У OMGO публички нет: / открывает ту же страницу, что /manager/.
+ * Корень сайта. Публички нет: / уходит на список пациентов, как /manager/.
+ * Сам /manager/ обрабатывает LegacyUrlStrategy (приоритет ниже этой стратегии).
  */
 class HomepageStrategy implements RouteStrategy
 {
@@ -18,13 +18,8 @@ class HomepageStrategy implements RouteStrategy
             return null;
         }
 
-        $cabinet = $repository->findBySlug('manager');
-        if ($cabinet && $cabinet->isActive()) {
-            return new RouteMatch([$cabinet], $cabinet, ['is_homepage' => true]);
-        }
-
         return new RouteMatch([], null, [
-            'http_redirect' => '/manager/',
+            'http_redirect' => LegacyUrlStrategy::PACIENT_LIST_URL,
             'http_redirect_code' => 302,
         ]);
     }

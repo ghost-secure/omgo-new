@@ -4,6 +4,7 @@ namespace Services;
 
 use Core\Auth\AuthManager;
 use Core\Auth\UserAccount;
+use Core\Log\ModeratorLog;
 use Helpers\Session;
 
 /**
@@ -72,6 +73,7 @@ class AuthService extends AuthManager
         Session::setValue(self::SESSION_UID, (int)$row['id']);
         $this->user = $row;
         $this->initialized = true;
+        ModeratorLog::onAuth((int)$row['id']);
         return true;
     }
 

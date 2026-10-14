@@ -50,6 +50,10 @@ return [
             return new \Services\AnalysisService($c->get(\Core\Database\QueryBuilder::class));
         },
 
+        \Services\CodeService::class => function ($c) {
+            return new \Services\CodeService($c->get(\Core\Database\QueryBuilder::class));
+        },
+
         'mailer' => function ($c) {
             return new \Services\MailService();
         },

@@ -7,5 +7,6 @@ return [
     'Core\Router\FormRouteStrategy' => 750,
     'Strategy\LoginStrategy' => 400,
     'Strategy\HomepageStrategy' => 300,
+    'Strategy\LegacyUrlStrategy' => 250,
     'Core\Router\HierarchicalStrategy' => 100,
 ];

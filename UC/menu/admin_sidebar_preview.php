@@ -28,13 +28,10 @@ if (!function_exists('menuPreviewNormalizePath')) {
             $type = $item['type'] ?? '';
             $children = is_array($item['children'] ?? null) ? $item['children'] : [];
             if ($type === 'group'):
-                $title = htmlspecialchars((string)($item['title'] ?? ''), ENT_QUOTES, 'UTF-8');
-                ?>
-                <div class="menu-label"><?= $title ?></div>
-                <?php if (!empty($children)) {
+                // Группа в JSON остаётся (редактор меню). В сайдбаре OMGO заголовок не показываем.
+                if (!empty($children)) {
                     menuPreviewRenderTree($children, $badges, $currentPath, true);
-                } ?>
-                <?php
+                }
                 continue;
             endif;
 
@@ -50,7 +47,6 @@ if (!function_exists('menuPreviewNormalizePath')) {
             $badgeNumber = (int)($badge['number'] ?? 0);
             $badgeColor = htmlspecialchars((string)($badge['color'] ?? '#ef4444'), ENT_QUOTES, 'UTF-8');
             $iconNameRaw = trim((string)($item['icon'] ?? ''));
-            $iconName = htmlspecialchars($iconNameRaw !== '' ? $iconNameRaw : 'System/menu-line', ENT_QUOTES, 'UTF-8');
             $hasBadge = $badgeNumber > 0;
             $isActive = menuPreviewNormalizePath($urlRaw) === menuPreviewNormalizePath($currentPath);
             ?>
@@ -61,7 +57,7 @@ if (!function_exists('menuPreviewNormalizePath')) {
                 <a href="<?= $url ?>" class="<?= htmlspecialchars($parentClass, ENT_QUOTES, 'UTF-8') ?>" data-page="menu-builder-preview">
                     <div class="nav-left">
                         <?php if ($root): ?>
-                            <span class="nav-icon" data-icon="<?= $iconName ?>"></span>
+                            <span class="nav-icon"><?= \Services\RemixIconCache::html($iconNameRaw !== '' ? $iconNameRaw : 'System/menu-line') ?></span>
                         <?php endif; ?>
                         <span><?= $name ?></span>
                     </div>
@@ -69,7 +65,7 @@ if (!function_exists('menuPreviewNormalizePath')) {
                         <?php if ($hasBadge): ?>
                             <span class="nav-badge" style="background:<?= $badgeColor ?>;"><?= $badgeNumber ?></span>
                         <?php endif; ?>
-                        <span class="chevron" data-icon="Arrows/arrow-down-s-line"></span>
+                        <span class="chevron"><?= \Services\RemixIconCache::html('Arrows/arrow-down-s-line') ?></span>
                     </div>
                 </a>
                 <?php menuPreviewRenderTree($children, $badges, $currentPath, false); ?>
@@ -79,7 +75,7 @@ if (!function_exists('menuPreviewNormalizePath')) {
                     ?>
                     <a href="<?= $url ?>" class="<?= htmlspecialchars($leafClass, ENT_QUOTES, 'UTF-8') ?>" data-page="menu-builder-preview">
                         <div class="nav-left">
-                            <span class="nav-icon" data-icon="<?= $iconName ?>"></span>
+                            <span class="nav-icon"><?= \Services\RemixIconCache::html($iconNameRaw !== '' ? $iconNameRaw : 'System/menu-line') ?></span>
                             <span><?= $name ?></span>
                         </div>
                         <?php if ($hasBadge): ?>
