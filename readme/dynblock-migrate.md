@@ -29,7 +29,7 @@
 Весь `omgo-lu/project/phpfiles/gen/` (50 файлов) разобран:
 
 - **48 простых** — php = вызов `base`, папка `UC/dynblock/<table>/base`.
-- **2 сложных** — скопированы как есть с комментарием `СЛОЖНЫЙ`: `t_analysis.php`, `t_pacient.php`.
+- **2 сложных** — `t_analysis.php` ещё легаси-заглушка. `t_pacient.php` — грид всех заявок `t_analysis/list` (роли позже).
 
 ## Сложный
 
@@ -37,11 +37,55 @@
 2. Сверху комментарий: `СЛОЖНЫЙ`, что кастомное (select / фильтр / blockid).
 3. Один такой интерфейс — отдельная итерация чата.
 
-Очередь сложных из `gen/`: `t_analysis.php` (GROUP_CONCAT + фильтр/blockid по роли), `t_pacient.php` (join, select, несколько ролей и blockid).
+Очередь сложных из `gen/`: `t_analysis.php` (GROUP_CONCAT + фильтр/blockid по роли). `t_pacient.php` уже показывает все заявки гридом `t_analysis/list` (копия столбцов паспорта врача). Роли, черновик, отчёты и кнопка «Добавить пациента» ещё не перенесены.
 
-Снаружи `gen/`: врачи — `web/doctors.php` → `t_users/doctors` (53) или `t_users/doctors_lab` (79, без маршрута), см. [doctors.md](doctors.md). Разные `blockid` легаси → разные папки DynBlock, не одно условие в config. Список маршрутов в модалке: `t_analysis_route/route-list` (легаси alias `route-list`).
+Снаружи `gen/`: врачи — `web/doctors.php` → `t_users/doctors` (53) или `t_users/doctors_lab` (79, без маршрута), см. [doctors.md](doctors.md). Паспорт врача — `web/doctor-passport.php`: карточка `t_users/doctor-card` (58) и список `t_analysis/doctor-patients` (54, фильтр `user_doctor`), см. [legacy-routes.md](legacy-routes.md). Разные `blockid` легаси → разные папки DynBlock, не одно условие в config. Список маршрутов в модалке: `t_analysis_route/route-list` (легаси alias `route-list`).
+
+Пользователи: каталог `/manager/admin/users/` → `project/phpfiles/manager/users.php` → DynBlock `t_users/base`. Конфиг сгенерирован (`POST /jsapi/view/interface`, таблица `t_users`). В гриде видны поля профиля, которые включены в `tblfields`, плюс учётные из `tblusers` (логин, email, телефон, группа, статус аккаунта, даты). Скрыты: `view_region` и `view_status` (`tblfields.disabled = 1`), `passwd` / `salt` / `hash`. Колонка `address_dadata` показывает чистый адрес (`value` из JSON), не сам JSON. Шаблоны врачей `doctors` и `doctors_lab` генератор не трогает.
 
 ## История логики
+
+### 2026-10-11 — фильтры активации на списке кодов
+
+- **Тип:** новая логика
+- **Было:** у `t_code/base` только фильтры полей справочника
+- **Стало:** два чекбокса свободных и активированных кодов. См. [codes.md](codes.md)
+
+### 2026-10-11 — список кодов: правки нет, ФИО в двух колонках
+
+- **Тип:** новая логика
+- **Было:** `t_code/base` без `columns`, ячейки автора и активатора — число
+- **Стало:** столбцы из `tblfields` собираются в config, у `author_add` и `user_activate` форматтер ФИО; удаление только неактивированных. См. [codes.md](codes.md)
+
+### 2026-10-11 — кнопка пула на списке кодов
+
+- **Тип:** новая логика
+- **Было:** `gen/t_code.php` — простой `t_code/base` без кнопок сценария
+- **Стало:** тот же `base`, в тулбаре кнопка «Создать пул кодов» (`toolbar_extra`). Сценарий — [codes.md](codes.md)
+
+### 2026-10-11 — список всех анализов
+
+- **Тип:** новая логика
+- **Было:** `gen/t_pacient.php` сразу `return`, легаси ниже не выполнялся
+- **Стало:** DynBlock `t_analysis/list`, все строки, столбцы как у `t_analysis/doctor-patients`. Фильтра по роли нет
+
+### 2026-10-10 — паспорт врача
+
+- **Тип:** новая логика
+- **Было:** `web/doctor-passport.php` в каталоге, файла и DynBlock не было
+- **Стало:** `t_users/doctor-card` и `t_analysis/doctor-patients`, см. [legacy-routes.md](legacy-routes.md)
+
+### 2026-10-08 — адрес в списке пользователей
+
+- **Тип:** новая логика
+- **Было:** ячейка `address_dadata` печатала JSON DaData
+- **Стало:** в гриде чистая строка `value`
+
+### 2026-10-08 — пользователи `/manager/admin/users/`
+
+- **Тип:** новая логика
+- **Было:** в каталоге php `manager/users.php`, файла не было
+- **Стало:** `t_users/base` (генератор) + страница как у референса; скрыты отключённые в `tblfields` регион и статус профиля
 
 ### 2026-10-07 — врачи (первый сложный вне gen/)
 

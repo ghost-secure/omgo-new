@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-11",
+  "purpose": "Короткие проверенные ответы консультанта. Только то, что легко перепутать. Не каталог всех README.",
+  "hotspots": [
+    {
+      "intent": "в дереве меню страница без названия только #id",
+      "answer_skeleton": "В JSON меню имени нет, только page_id. Редактор догружает названия через GET /jsapi/view/catalogsearch?ids=. Для списка id ядро отдаёт все запрошенные страницы, потолок 500. Поиск по строке в том же методе до 50. Голый #id значит, что этой строки нет в ответе catalogsearch.",
+      "forbid_generic": [
+        "у страницы пустое catalog.name",
+        "страница не найдена в базе"
+      ],
+      "doc": "project/readme/auth-and-menu.md"
+    },
+    {
+      "intent": "иконки левого меню откуда берутся localStorage jsdelivr",
+      "answer_skeleton": "Пункты сайдбара и стрелка раскрытия берут SVG из runtime/cache/icons/remixicon/4.9.1/. Файл качается с jsDelivr один раз при сборке меню (RemixIconCache), дальше читается с диска. В HTML нет data-icon, в localStorage эти иконки не пишутся. Плагин icon-system и ключи icon-cache-v1- остаются для шапки, таблиц и форм.",
+      "forbid_generic": [
+        "меню каждый раз ходит на cdn.jsdelivr.net из браузера",
+        "иконки пунктов лежат в localStorage"
+      ],
+      "doc": "project/readme/auth-and-menu.md"
+    },
+    {
+      "intent": "как создать пул проверочных кодов / WF_CODEPULL / mant_code",
+      "answer_skeleton": "Страница /manager/mant_code/. Кнопка «Создать пул кодов» в тулбаре открывает модалку: тип анализа (HRD, AKT, BRCA, HRR, PTEN) и количество 1–500. Коды пишутся в t_code сервисом CodeService. Строка t_events не создаётся. Префикс — три латинские буквы имени типа: BRCA даёт BRC, «ИГХ PTEN» даёт PTE.",
+      "forbid_generic": [
+        "пул пишется в t_events",
+        "форма уходит в action.php",
+        "префикс всегда первые три символа названия как есть"
+      ],
+      "doc": "project/readme/codes.md"
+    },
+    {
+      "intent": "кто активировал код показывает лабораторию а не ФИО",
+      "answer_skeleton": "user_activate — это t_users.cat учётки, которая потратила код. Ячейка собирает фамилию, имя и отчество. У входов lab-1, lab-2, lab-3 фамилия пустая, а в имени записано название лаборатории, поэтому в ячейке оно. У врача в той же колонке фамилия и имя.",
+      "forbid_generic": [
+        "user_activate ссылается на t_lab",
+        "это баг джойна, надо показывать другую таблицу"
+      ],
+      "doc": "project/readme/codes.md"
+    },
+    {
+      "intent": "фильтр только активированные только неактивированные коды",
+      "answer_skeleton": "Два чекбокса в фильтрах грида t_code. Активированный код: заполнен date_activate или user_activate больше нуля. Свободный — оба пустые. Оба чекбокса сразу дают пустой список. Удалить можно только свободный код, правки строки нет.",
+      "forbid_generic": [
+        "активация смотрит только user_activate",
+        "оба фильтра вместе показывают все коды"
+      ],
+      "doc": "project/readme/codes.md"
+    },
+    {
+      "intent": "цвет строки и бейджа анализа зелёный hex",
+      "answer_skeleton": "В справочнике лежит мнемоника: green, blue, yellow, red, lgrey, purple, deepgreen, pink. Фон строки — var(--color-bg-мнемоника) из t_analiz_status.varc_color. Бейдж и образец легенды — класс bg-мнемоника. pink читает --pink, остальные сплошные — --color-мнемоника. Hex только в config-light.css, значения из uikit.css. Короткие --blue и --green из lu-original.css этот список не читает. Пустая мнемоника строку не красит.",
+      "forbid_generic": [
+        "поставить background #00bc8b или color green",
+        "красить строку классом row-success",
+        "взять --blue или --green из блока variables lu-original.css"
+      ],
+      "doc": "project/readme/patients.md"
+    },
+    {
+      "intent": "фильтр по фамилии пациента и врача в списке пациентов",
+      "answer_skeleton": "Два отдельных поля: «Фамилия пациента» ищет только t_pacient.varc_surname, «Фамилия врача» — только t_users.varc_surname. Фильтр столбца «ФИО пациента» ищет фамилию, имя и отчество вместе. Фильтр столбца «Врач» ищет полное ФИО.",
+      "forbid_generic": [
+        "фильтр ФИО ищет только фамилию",
+        "фамилия врача ищется по всему ФИО"
+      ],
+      "doc": "project/readme/patients.md"
+    }
+  ],
+  "notes": [
+    "Сюда только частые ошибки ответа. Обычное описание модуля живёт в README и в summary assistant-index.json.",
+    "Файл должен оставаться коротким: ядро кладёт его в контекст помощника целиком."
+  ]
+}

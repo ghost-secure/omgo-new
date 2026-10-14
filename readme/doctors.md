@@ -35,7 +35,7 @@ URL: [http://omgo/manager/doctors/](http://omgo/manager/doctors/).
 `[=view_region=]` и т.п. — тип `view_`, ядро подставляет `*_name`.  
 `[=user=email=]` / `[=user=phone=]` — поля `email` / `phone` после JOIN `tblusers`.
 
-Число пациентов: `0` не показываем (`{if … ?=0?= …}`). Ссылка «пациенты» только если счётчик > 0 → `/manager/doctor/{cat}/` (легаси `{=iconlink … /[71][N_ID]/}`). Страница паспорта ещё не собрана.
+Число пациентов: `0` не показываем (`{if … ?=0?= …}`). Ссылка «пациенты» только если счётчик > 0 → `/manager/doctor/{cat}/` (легаси `{=iconlink … /[71][N_ID]/}`). Паспорт: [legacy-routes.md](legacy-routes.md).
 
 Столбец «Маршрут» (только `doctors`): кнопка **Маршрут** + бейдж `COUNT` из `custom_templateparam_route` (0 — без бейджа). Клик — admin-flow `route` (контекст `table=t_users`, `dataid=cat` врача). Форма: тип PTEN, лаборатория; сохранение в `t_analysis_route`; ниже список `t_analysis_route/route-list` (легаси `Lu::Block` alias `route-list`). После сохранения модалка остаётся, список и бейдж в гриде обновляются. Лаборатория столбец не видит. См. [admin-flow.md](admin-flow.md), [legacy-wf.md](legacy-wf.md).
 
@@ -54,6 +54,12 @@ URL: [http://omgo/manager/doctors/](http://omgo/manager/doctors/).
 - **Тип:** новая логика
 - **Было:** один `t_users/doctors` на все роли (blockid 79 в дампе не нашли)
 - **Стало:** `ROLE_LAB` → `t_users/doctors_lab` без столбца «Маршрут», как легаси 79; не `visible`/условие в общем config
+
+### 2026-10-10 — ссылка «пациенты» открывает паспорт
+
+- **Тип:** новая логика
+- **Было:** `/manager/doctor/{cat}/` в гриде есть, страница не собрана
+- **Стало:** паспорт врача, см. [legacy-routes.md](legacy-routes.md)
 
 ### 2026-10-08 — кнопка маршрута и флоу
 

@@ -27,6 +27,8 @@
 
 Запасной узел каталога id=5 (`/manager/add/`, `php = system/form.php`) нужен, только если стратегия не зарегистрировалась. Легаси `core-add.php` на этом сайте нет.
 
+INSERT новой страницы передаёт только поля формы. В легаси-дампе `secondaryview`, `navig` и `topid` — `NOT NULL` без DEFAULT, MySQL отвечает 1364. После наката дампа это снимает `php core/legacy/run.php` (скрипт `02`, см. `core/readme/legacy-dump.md`). `url` делает ядерная миграция `UpdateCatalogUrlNullable`.
+
 ## История логики
 
 ### 2026-10-04 — кнопки настройки полей в Справочниках

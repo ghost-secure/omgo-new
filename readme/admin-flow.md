@@ -31,7 +31,11 @@
 - `TableMetadataManager::createActiveRecord('t_analysis_route')` → `save()`;
 - `TAnalysisRouteHook::beforeSave` (тип только PTEN, лаба обязательна) и `afterSave` (пока пустой).
 
-После успеха модалка **не закрывается**: перечитывается список внутри окна и грид врачей (бейдж).
+После успеха модалка маршрута **не закрывается**: перечитывается список внутри окна и грид врачей (бейдж).
+
+Пул кодов: `POST /jsapi/admin/code-pool` (`CodePoolHandler`). Контекст страницы, не строки: `flow_id=codes`, `action=WF_CODEPULL`, `dataid=0`, `table=t_code`. После успеха модалка закрывается, грид кодов перечитывается. Форма и кнопка — [codes.md](codes.md).
+
+`Flow::button` с `variant=toolbar` — кнопка в правой группе тулбара (иконка + подпись, как «Выгрузить в Excel»). Слот: `toolbar_extra` в config DynBlock.
 
 ## Файлы
 
@@ -47,3 +51,11 @@
 Новый сценарий: файл в `phpfiles/flow/`, строка в `admin_flow.php`, кнопка `Flow::button`, при записи — свой POST-хендлер (если не хватает нативных полей формы).
 
 Легаси-аналог: [legacy-wf.md](legacy-wf.md).
+
+## История логики
+
+### 2026-10-11 — пул кодов и кнопка тулбара
+
+- **Тип:** новая логика
+- **Было:** один сценарий `route`; `Flow::button` — иконка или подпись `btn-sm`
+- **Стало:** сценарий `codes` (`POST /jsapi/admin/code-pool`); `variant=toolbar` для кнопки в тулбаре грида. Подробно [codes.md](codes.md)

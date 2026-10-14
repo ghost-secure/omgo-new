@@ -61,3 +61,9 @@ Lu::Block([
 | `Lu::Block('route-list')` | `UC\DynBlock('t_analysis_route', 't_analysis_route/route-list')` |
 
 Инфра модалок — [admin-flow.md](admin-flow.md). Кейс врачей — [doctors.md](doctors.md).
+
+## Пул кодов (`wf/codes.php`)
+
+Кнопка на странице `gen/t_code.php`: `WF::Button` с `id=codes`, `action=WF_CODEPULL`. Форма в `wf/codes.php` уходит в `action.php` с `table=t_events`. Сам пул пишет `aftersave/t_events.php`: N строк `t_code` с `view_analiz`, код — `Code::makeCode`. Отдельный `aftersave/t_code.php` заполняет `varc_code` у одной новой строки из POST `view_analiz`.
+
+На новом ядре это `flow/codes.php` и `CodeService`, без строки в `t_events`. См. [codes.md](codes.md).

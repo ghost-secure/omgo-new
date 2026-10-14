@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "description": "Карта markdown для админ-помощника и индексации Redis. Пути от корня репозитория (рядом с project/ и core/). Магазин test не индексируем.",
+  "exclude_globs": [
+    "**/vendor/**",
+    "**/node_modules/**",
+    "**/core/assets/vendor/**",
+    "**/build/**",
+    "**/runtime/**"
+  ],
+  "layers": {
+    "core": {
+      "summary": "Механика ядра: DynBlock, формы, JsAPI, роутер. Бизнес кабинета сюда не писать.",
+      "readme_hints": [
+        "core/readme/INDEX.md",
+        "core/readme/dynblock.md",
+        "core/readme/forms.md",
+        "core/readme/migrate-legacy.md"
+      ],
+      "code_scan_hints": ["core/UC", "core/Core/Api/JsApi"]
+    },
+    "project": {
+      "summary": "Кабинет лаборатории OMGO: вход, врачи, анализы, проверочные коды, модалки.",
+      "readme_globs": ["project/readme/**/*.md", "project/readme/**/*.json"],
+      "code_scan_hints": [
+        "project/Api",
+        "project/Services",
+        "project/config",
+        "project/UC/dynblock",
+        "project/phpfiles"
+      ]
+    }
+  },
+  "documents": [
+    {
+      "path": "project/readme/INDEX.md",
+      "layer": "project",
+      "role": "map",
+      "topics": ["навигация", "документация", "помощник"],
+      "summary": "Карта проектных README кабинета. Новый файл по проектному кейсу — строка здесь и запись в documents этого JSON."
+    },
+    {
+      "path": "project/readme/auth-and-menu.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["вход", "логин", "auth.gate", "меню", "t_menu", "иконки", "remixicon", "регистрация", "восстановление"],
+      "summary": "Кабинет закрыт целиком: auth.gate=all. Белый список /login, /reg, /recover и связанные JsAPI. Роли кабинета — auth.manager_roles, не константы t_roles. Сайдбар — t_menu.admin_left. Группы в JSON есть, заголовок .menu-label шаблон сайдбара не рисует. Иконки пунктов качает RemixIconCache в runtime/cache и вставляет SVG; localStorage и jsDelivr меню не использует. Страница /manager/admin/menu/ — грид t_menu/base. Редактор дерева догружает названия всех page_id одним catalogsearch, потолок 500."
+    },
+    {
+      "path": "project/readme/admin-catalog.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["страницы", "catalog", "справочники", "tblview"],
+      "summary": "Грид страниц /manager/admin/pages/ — DynBlock catalog/base. Справочники — tblview, тот же контур. INSERT страницы не пишет secondaryview, navig и topid: после дампа их делает nullable скрипт core/legacy/02."
+    },
+    {
+      "path": "project/readme/dynblock-migrate.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["миграция", "gen", "base", "простой", "сложный"],
+      "summary": "Простой легаси-gen переносится как DynBlock table/base без columns. Сложный (роли, JOIN, несколько blockid) — отдельный шаблон. t_code остаётся base, но столбцы собраны в config из-за ФИО."
+    },
+    {
+      "path": "project/readme/services.md",
+      "layer": "project",
+      "role": "reference",
+      "topics": ["сервисы", "RoleService", "AnalysisService", "CodeService"],
+      "summary": "Проектные сервисы в project/Services, синглтоны в project/config/services.php. Роли кабинета — RoleService. Коды — CodeService. analysisGridQuery собирает грид заявок: ФИО, дубль, регионы, мнемоники цвета статуса и типа, SQL фильтров виртуальных столбцов."
+    },
+    {
+      "path": "project/readme/doctors.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["врачи", "doctors", "ROLE_LAB", "маршрут"],
+      "summary": "/manager/doctors/: не лаборатория видит t_users/doctors, лаборатория — t_users/doctors_lab без столбца «Маршрут». Врач отбирается EXISTS по view_role, не JOIN матрицы."
+    },
+    {
+      "path": "project/readme/legacy-routes.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["адреса", "паспорт врача", "mant_pacient", "GUID"],
+      "summary": "/ и /manager/ ведут на /manager/mant_pacient/. Паспорт врача — /manager/doctor/{cat}/. GUID анализа намечен, не включён."
+    },
+    {
+      "path": "project/readme/legacy-wf.md",
+      "layer": "project",
+      "role": "reference",
+      "topics": ["wf", "action.php", "легаси", "модалка"],
+      "summary": "Как в легаси открывался попап wf/*.php и hash. Новый кабинет это не вызывает: модалки — admin-flow."
+    },
+    {
+      "path": "project/readme/admin-flow.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["модалка", "FlowSignature", "admin.flow", "маршрут", "пул кодов"],
+      "summary": "Кнопка data-admin-flow открывает GET /jsapi/admin/flow. id из белого списка project/config/admin_flow.php, подпись HMAC. Пул кодов — id codes, action WF_CODEPULL, dataid 0."
+    },
+    {
+      "path": "project/readme/patients.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["пациенты", "t_analysis", "mant_pacient", "статус", "бейдж", "фильтр", "фамилия", "цвет"],
+      "summary": "Список /manager/mant_pacient/ — грид t_analysis/list, строка это анализ плюс пациент. Фон строки — var(--color-bg-*) из мнемоники t_analiz_status.varc_color. Легенда и бейдж типа — класс bg-* (сплошной --color-* или --pink). Фильтр есть у каждого столбца. Отдельные поля ищут только фамилию пациента и только фамилию врача. Паспорт врача тот же SQL, без этой раскраски."
+    },
+    {
+      "path": "project/readme/codes.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": [
+        "проверочные коды",
+        "t_code",
+        "пул",
+        "WF_CODEPULL",
+        "user_activate",
+        "date_activate",
+        "ФИО",
+        "лаборатория"
+      ],
+      "summary": "Страница /manager/mant_code/. Кнопка «Создать пул кодов» пишет N кодов в t_code для типа анализа (HRD, AKT, BRCA, HRR, PTEN), без строки t_events. Правки нет. Удалить можно только неактивированный код. Фильтры: «Только неактивированные» и «Только активированные»; оба сразу — пустой список. author_add и user_activate показывают ФИО из t_users. У лабораторных входов в имени название лаборатории, фамилия пустая."
+    },
+    {
+      "path": "project/readme/ui-theme.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["тема", "светлая", "#ff7f22", "тултип", "лого", "скролл", "сайдбар", "мнемоника", "color-green"],
+      "summary": "Светлая тема кабинета: project/overrides/assets/config-light.css, акцент #ff7f22, чёрный сайдбар. Бегунок меню чуть светлее фона (#333, наведение #4a4a4a). Раскрытое подменю по высоте содержимого, вертикальные отступы ссылок вдвое меньше ядра. Мнемоники списка пациентов — --color-* и --color-bg-* из легаси uikit.css, pink — --pink из lu-original.css. Короткие --blue и --green из lu-original список не использует. В разметке hex не пишется. Магазинный шрифт test не копировали."
+    },
+    {
+      "path": "project/readme/admin-settings.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["настройки", "имперсонализация", "вход под пользователем"],
+      "summary": "Кнопка «Настройки» — ядерный сайдбар. Проектный panel.php добавляет вход под пользователем."
+    },
+    {
+      "path": "core/readme/INDEX.md",
+      "layer": "core",
+      "role": "map",
+      "topics": ["ядро", "навигация", "помощник"],
+      "summary": "Карта README ядра. Проектные кейсы кабинета сюда не складывать."
+    },
+    {
+      "path": "core/readme/dynblock.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["DynBlock", "фильтр", "flag", "filter_fields", "toolbar_extra", "varc", "unix"],
+      "summary": "Запрос грида, JOIN, фильтры. Слот toolbar_extra. Тип фильтра flag — один чекбокс. Дополнительные фильтры без столбца — config.filter_fields. В admin-table type varc — текстовое поле, type number — диапазон. compare date и unix в filterColumnExpressions сравнивают календарь, не DECIMAL. Подпись фильтра берётся из label столбца."
+    },
+    {
+      "path": "core/readme/forms.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["форма", "хук", "beforeDelete", "t_code"],
+      "summary": "Универсальная форма справочника. Хук таблицы может отменить удаление: для t_code активированный код не удаляется. Поле catlink догружает названия страниц пачкой id, потолок 500; поиск по строке в том же методе до 50."
+    },
+    {
+      "path": "core/readme/migrate-legacy.md",
+      "layer": "core",
+      "role": "roadmap",
+      "topics": ["миграция", "легаси", "статус"],
+      "summary": "Короткая карта переноса OMGO: что уже на новом ядре и что следующее. Не заменяет тематический README."
+    },
+    {
+      "path": "core/readme/legacy-dump.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["дамп", "legacy", "created_", "catalog", "secondaryview", "1364"],
+      "summary": "После импорта старой базы: php build/migrate.php, затем php core/legacy/run.php. Скрипт 01 переводит created_* из INT unix в DATETIME (+03:00). Скрипт 02 делает catalog.secondaryview, navig и topid nullable, иначе INSERT страницы падает с 1364. url трогает ядерная миграция UpdateCatalogUrlNullable, не этот пакет."
+    }
+  ],
+  "notes": "После проектного чата обновить README и summary этой записи в том же ходе. Секреты и .env сюда не писать. Частые ловушки — в assistant-context-pack.json, не дублировать сюда простынёй."
+}
