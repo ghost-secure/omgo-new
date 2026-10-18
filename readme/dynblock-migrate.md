@@ -29,7 +29,7 @@
 Весь `omgo-lu/project/phpfiles/gen/` (50 файлов) разобран:
 
 - **48 простых** — php = вызов `base`, папка `UC/dynblock/<table>/base`.
-- **2 сложных** — `t_analysis.php` ещё легаси-заглушка. `t_pacient.php` — грид всех заявок `t_analysis/list` (роли позже).
+- **2 сложных** — `t_analysis.php` ещё легаси-заглушка. `t_pacient.php` — грид `t_analysis/list` с фильтром роли и кнопкой «Добавить пациента».
 
 ## Сложный
 
@@ -37,13 +37,19 @@
 2. Сверху комментарий: `СЛОЖНЫЙ`, что кастомное (select / фильтр / blockid).
 3. Один такой интерфейс — отдельная итерация чата.
 
-Очередь сложных из `gen/`: `t_analysis.php` (GROUP_CONCAT + фильтр/blockid по роли). `t_pacient.php` уже показывает все заявки гридом `t_analysis/list` (копия столбцов паспорта врача). Роли, черновик, отчёты и кнопка «Добавить пациента» ещё не перенесены.
+Очередь сложных из `gen/`: `t_analysis.php` (GROUP_CONCAT + фильтр/blockid по роли). `t_pacient.php` — грид `t_analysis/list`: роль режет строки, кнопка «Добавить пациента», предупреждение о незакрытом коде. Врач на телефоне — карточки `t_analysis/doctor-mobile` (легаси id 66). Отчёты, чекбоксы просрочки и наборы столбцов 44, 59, 69 ещё нет. См. [patients.md](patients.md).
 
 Снаружи `gen/`: врачи — `web/doctors.php` → `t_users/doctors` (53) или `t_users/doctors_lab` (79, без маршрута), см. [doctors.md](doctors.md). Паспорт врача — `web/doctor-passport.php`: карточка `t_users/doctor-card` (58) и список `t_analysis/doctor-patients` (54, фильтр `user_doctor`), см. [legacy-routes.md](legacy-routes.md). Разные `blockid` легаси → разные папки DynBlock, не одно условие в config. Список маршрутов в модалке: `t_analysis_route/route-list` (легаси alias `route-list`).
 
 Пользователи: каталог `/manager/admin/users/` → `project/phpfiles/manager/users.php` → DynBlock `t_users/base`. Конфиг сгенерирован (`POST /jsapi/view/interface`, таблица `t_users`). В гриде видны поля профиля, которые включены в `tblfields`, плюс учётные из `tblusers` (логин, email, телефон, группа, статус аккаунта, даты). Скрыты: `view_region` и `view_status` (`tblfields.disabled = 1`), `passwd` / `salt` / `hash`. Колонка `address_dadata` показывает чистый адрес (`value` из JSON), не сам JSON. Шаблоны врачей `doctors` и `doctors_lab` генератор не трогает.
 
 ## История логики
+
+### 2026-10-14 — роль и кнопка на списке заявок
+
+- **Тип:** новая логика
+- **Было:** `gen/t_pacient.php` показывал все строки без кнопки
+- **Стало:** фильтр и кнопка по роли. См. [patients.md](patients.md)
 
 ### 2026-10-11 — фильтры активации на списке кодов
 

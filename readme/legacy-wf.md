@@ -67,3 +67,11 @@ Lu::Block([
 Кнопка на странице `gen/t_code.php`: `WF::Button` с `id=codes`, `action=WF_CODEPULL`. Форма в `wf/codes.php` уходит в `action.php` с `table=t_events`. Сам пул пишет `aftersave/t_events.php`: N строк `t_code` с `view_analiz`, код — `Code::makeCode`. Отдельный `aftersave/t_code.php` заполняет `varc_code` у одной новой строки из POST `view_analiz`.
 
 На новом ядре это `flow/codes.php` и `CodeService`, без строки в `t_events`. См. [codes.md](codes.md).
+
+## Меню заявки (`{{ workflow }}`, `{{ operation }}`)
+
+В колонке «Действия» списка пациентов легаси стояли два токена. `{{ workflow || dropdown }}` — выпадающий список операций из `t_wf` (`Replace::AnalysisWorkflow`). `{{ workflow || buttons }}` — те же операции кнопками, так рисуется паспорт. `{{ operation }}` — ссылки «пациент», «анализ», «заключение» и чекбоксы заключения и экспресса.
+
+Кнопка с модалкой открывала `wf/analysis.php` и сохраняла строку `t_events` через `action.php`. Дальше статус менял `logic/aftersave/t_events.php`. Шесть операций (материал получен, пригоден, израсходован, вернуть материал, пациент заберёт сам, завершить анализ) уходили формой сразу, без окна комментария.
+
+На новом ядре это колонка грида и флоу `analysis`. См. [analysis-workflow.md](analysis-workflow.md).

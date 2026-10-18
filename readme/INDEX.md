@@ -22,10 +22,13 @@
 | [legacy-wf.md](legacy-wf.md) | Легаси WF: `wf/*.php`, hash, `action.php`, `Lu::Block` |
 | [admin-flow.md](admin-flow.md) | Модалки кабинета: `FlowSignature`, `/jsapi/admin/flow` |
 | [codes.md](codes.md) | Проверочные коды: пул на `/manager/mant_code/` |
-| [patients.md](patients.md) | Список пациентов `/manager/mant_pacient/`: цвет статуса, бейдж типа, фильтры |
+| [pdf.md](pdf.md) | Заключение PDF: `/pdf/{guid}/`, шаблон по типу анализа, внешняя печать |
+| [patients.md](patients.md) | Заявка = пациент и анализ: список, код, карточка черновика |
+| [analysis-workflow.md](analysis-workflow.md) | Колонка «Действия»: ссылки и меню воркфлоу заявки |
+| [block-expander.md](block-expander.md) | Пилюля на нижней границе блока: раскрывает подблок `data-block-expander-more` |
 | [assistant-index.json](assistant-index.json) | Карта документов для помощника: путь, темы, краткое описание |
 | [assistant-context-pack.json](assistant-context-pack.json) | Короткие ловушки, которые помощник путает |
-| [ui-theme.md](ui-theme.md) | Светлая тема: `#ff7f22`, лого, чёрный сайдбар, тултипы |
+| [ui-theme.md](ui-theme.md) | Светлая тема: палитра в `config.css`, лого, чёрный сайдбар, тултипы |
 | [admin-settings.md](admin-settings.md) | Настройки в шапке: карта файлов + вход под пользователем |
 
 Карта переноса с легаси: **`core/readme/migrate-legacy.md`**.

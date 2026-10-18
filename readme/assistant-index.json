@@ -13,6 +13,8 @@
       "summary": "Механика ядра: DynBlock, формы, JsAPI, роутер. Бизнес кабинета сюда не писать.",
       "readme_hints": [
         "core/readme/INDEX.md",
+        "core/readme/auth.md",
+        "core/readme/sidebar.md",
         "core/readme/dynblock.md",
         "core/readme/forms.md",
         "core/readme/migrate-legacy.md"
@@ -43,8 +45,8 @@
       "path": "project/readme/auth-and-menu.md",
       "layer": "project",
       "role": "topic",
-      "topics": ["вход", "логин", "auth.gate", "меню", "t_menu", "иконки", "remixicon", "регистрация", "восстановление"],
-      "summary": "Кабинет закрыт целиком: auth.gate=all. Белый список /login, /reg, /recover и связанные JsAPI. Роли кабинета — auth.manager_roles, не константы t_roles. Сайдбар — t_menu.admin_left. Группы в JSON есть, заголовок .menu-label шаблон сайдбара не рисует. Иконки пунктов качает RemixIconCache в runtime/cache и вставляет SVG; localStorage и jsDelivr меню не использует. Страница /manager/admin/menu/ — грид t_menu/base. Редактор дерева догружает названия всех page_id одним catalogsearch, потолок 500."
+      "topics": ["вход", "логин", "auth.gate", "меню", "t_menu", "t_roles", "catlink_parent", "сайдбар", "иконки", "remixicon", "регистрация", "восстановление"],
+      "summary": "Кабинет закрыт целиком: auth.gate=all. Белый список /login, /reg, /recover и связанные JsAPI. Отдельно гейт пропускает /pdf/{guid}/?create=1 — это запрос сервиса печати, HTML отдаёт одноразовый токен. Вход пишет сессию omgo_auth_uid и проектную куку AUTH_KEY до 1 января 2030 (логин, хэш пароля, IP). Закрытие браузера сессию стирает, куку поднимает вход снова. Вход под пользователем в куку не входит. Лимит 5 попыток за 15 минут считает ядро по AUTH_LOGIN_MAX_ATTEMPTS и AUTH_LOGIN_WINDOW_MINUTES. loginAttemptLimit() в проекте пустой. Роли кабинета — auth.manager_roles. Сайдбар — t_menu.admin_left, страницы режет t_roles.catlink_parent. Суперадмин tblusers.role=1 видит меню целиком."
     },
     {
       "path": "project/readme/admin-catalog.md",
@@ -58,14 +60,14 @@
       "layer": "project",
       "role": "topic",
       "topics": ["миграция", "gen", "base", "простой", "сложный"],
-      "summary": "Простой легаси-gen переносится как DynBlock table/base без columns. Сложный (роли, JOIN, несколько blockid) — отдельный шаблон. t_code остаётся base, но столбцы собраны в config из-за ФИО."
+      "summary": "Простой легаси-gen переносится как DynBlock table/base без columns. Сложный (роли, JOIN, несколько blockid) — отдельный шаблон. t_pacient — грид t_analysis/list с фильтром роли и кнопкой «Добавить пациента». t_code остаётся base, столбцы собраны в config из-за ФИО."
     },
     {
       "path": "project/readme/services.md",
       "layer": "project",
       "role": "reference",
-      "topics": ["сервисы", "RoleService", "AnalysisService", "CodeService"],
-      "summary": "Проектные сервисы в project/Services, синглтоны в project/config/services.php. Роли кабинета — RoleService. Коды — CodeService. analysisGridQuery собирает грид заявок: ФИО, дубль, регионы, мнемоники цвета статуса и типа, SQL фильтров виртуальных столбцов."
+      "topics": ["сервисы", "RoleService", "menuPageIds", "catlink_parent", "AnalysisService", "CodeService"],
+      "summary": "Проектные сервисы в project/Services, синглтоны в project/config/services.php. Роли кабинета — RoleService. menuPageIds отдаёт страницы сайдбара: null у суперадмина, иначе объединение catlink_parent. analysisGridQuery собирает грид заявок. pacientListScope режет список по роли и помечает врача флагом doctor для карточек на телефоне. AnalysisWorkflowService читает меню t_wf по первой роли roles_map и пишет событие. CodeService кроме пула ищет свободный код и помечает его потраченным. ConclusionDocument собирает HTML заключения из tbldynelements, RemoteHtmlToPdf печатает его по PRINTPDF_URL."
     },
     {
       "path": "project/readme/doctors.md",
@@ -78,29 +80,36 @@
       "path": "project/readme/legacy-routes.md",
       "layer": "project",
       "role": "topic",
-      "topics": ["адреса", "паспорт врача", "mant_pacient", "GUID"],
-      "summary": "/ и /manager/ ведут на /manager/mant_pacient/. Паспорт врача — /manager/doctor/{cat}/. Номера страниц — Helpers\\Page. GUID анализа намечен, не включён."
+      "topics": ["адреса", "паспорт врача", "mant_pacient", "GUID", "pacient"],
+      "summary": "/ и /manager/ ведут на /manager/mant_pacient/. Паспорт врача — /manager/doctor/{cat}/. Форма пациента открыта: /manager/pacient/ без GUID и /manager/pacient/{guid}/. PDF заключения — /pdf/{guid}/. Номера страниц — Helpers\\Page. Паспорт анализа /manager/passport/{guid}/: шапка всегда видна, ниже кнопки вкладок UC\\TabSet, открыта одна панель. Строка свойства — UC\\PropLine, подпись синяя и жирная. Группа характеристик — UC\\PropGroup: внутри gap-sm, между группами gap-md. Форма лаборатории по GUID ещё не включена."
     },
     {
       "path": "project/readme/legacy-wf.md",
       "layer": "project",
       "role": "reference",
-      "topics": ["wf", "action.php", "легаси", "модалка"],
-      "summary": "Как в легаси открывался попап wf/*.php и hash. Новый кабинет это не вызывает: модалки — admin-flow."
+      "topics": ["wf", "action.php", "легаси", "модалка", "workflow", "operation"],
+      "summary": "Как в легаси открывался попап wf/*.php и hash. Меню заявки — токены {{ workflow }} и {{ operation }}: dropdown в таблице, кнопки в паспорте, шесть операций без модалки. Новый кабинет вызывает admin-flow, не action.php."
     },
     {
       "path": "project/readme/admin-flow.md",
       "layer": "project",
       "role": "topic",
-      "topics": ["модалка", "FlowSignature", "admin.flow", "маршрут", "пул кодов"],
-      "summary": "Кнопка data-admin-flow открывает GET /jsapi/admin/flow. id из белого списка project/config/admin_flow.php, подпись HMAC. Пул кодов — id codes, action WF_CODEPULL, dataid 0."
+      "topics": ["модалка", "FlowSignature", "admin.flow", "маршрут", "пул кодов", "analysis"],
+      "summary": "Кнопка data-admin-flow открывает GET /jsapi/admin/flow. id из белого списка project/config/admin_flow.php, подпись HMAC. Пул кодов — id codes. Воркфлоу заявки — id analysis, запись POST /jsapi/admin/analysis-event. Мгновенные операции модалку не открывают."
+    },
+    {
+      "path": "project/readme/analysis-workflow.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["воркфлоу", "действия", "t_wf", "operation", "dropdown", "заявка", "MLPA", "PTEN"],
+      "summary": "Колонка «Действия» списка заявок: ссылки и меню операций из t_wf. Клики слушает проектный плагин analysis-event из project/web/assets/plugins, имя в project/config/plugins.php. Меню открывает ссылка «операции», ширина по самой длинной кнопке, открыт один список. Список переносится в body, потому что последняя колонка закреплена. Роль меню — первая в roles_map. Шесть операций пишутся сразу, остальные открывают флоу analysis. Сохранение меняет статус и пишет t_events. Ссылка «заключение» открывает /pdf/{guid}/. На паспорте воркфлоу — отдельные кнопки, операции — отдельная колонка. Только в паспорте ещё «статус пациента» (суперадмин, администратор, лаборатория), «изменить лаб-ю» и «изменить ФИО или дату рождения» (суперадмин и администратор)."
     },
     {
       "path": "project/readme/patients.md",
       "layer": "project",
       "role": "topic",
-      "topics": ["пациенты", "t_analysis", "mant_pacient", "статус", "бейдж", "фильтр", "фамилия", "цвет"],
-      "summary": "Список /manager/mant_pacient/ — грид t_analysis/list, строка это анализ плюс пациент. Фон строки — var(--color-bg-*) из мнемоники t_analiz_status.varc_color. Легенда и бейдж типа — класс bg-* (сплошной --color-* или --pink). Фильтр есть у каждого столбца. Отдельные поля ищут только фамилию пациента и только фамилию врача. Паспорт врача тот же SQL, без этой раскраски."
+      "topics": ["пациенты", "t_analysis", "mant_pacient", "статус", "бейдж", "фильтр", "фамилия", "цвет", "добавить пациента", "проверочный код", "черновик", "действия", "воркфлоу"],
+      "summary": "Пациент и анализ — одна заявка t_analysis, отдельного списка пациентов нет. /manager/mant_pacient/ — грид t_analysis/list. Первые столбцы: ФИО пациента, Анализ, Статус, дальше набор блока 54. Фильтр #ID — строка 1,2,5-10 и кнопка в шапке столбца. Паспорт врача этот порядок не берёт. Пустые «Статус мутации» и «Статус HRD» (id 0) — прочерк, не цифра. Роль режет строки и показывает кнопку «Добавить пациента»: на телефоне над таблицей, на десктопе и iPad под ней, это Request::isMobile(), не ширина окна. Если последняя роль — врач и клиент мобильный, вместо таблицы карточки t_analysis/doctor-mobile (легаси id 66, не блок 44). Страница — колонка flex-column с gap-md: этот gap отделяет предупреждение от заголовка «Анализы». Группа характеристик UC\\PropGroup: внутри gap-sm, между группами обычный gap-md. На десктопе и iPad «Добавить пациента» слева в тулбаре грида, на телефоне над списком. Пробный проектный слой: тулбар над фильтрами. Слева «Добавить пациента», справа «Фильтры» и кнопки вида с подписью на десктопе. Панель фильтров — правый сайдбар 28rem, не шире экрана, высота экрана, поля колонкой, диапазон дат в одну строку, без горизонтальных линий: между группами gap-md. Шапка закрывает панель. Основные фильтры — фамилия пациента и фамилия врача, остальные прячет кнопка UC\\BlockExpander. Она в подвале и отделена от «Найти» gap-md. В ядро не перенесено. UC\\Errors::formError без внешнего margin, только внутренний padding. Крестик убирает полосу до обновления, закрытие не запоминается. Фон строки статуса и в тёмной теме, слева сплошная полоса мнемоники. Легенда: один образец на цвет, статусы через запятую; образец — бледный фон и левая полоса, как ячейка. Крестик прячет легенду на сутки через dismissible-info. Фон строки — var(--color-bg-*). Бейдж типа — класс bg-*. Фильтр есть у каждого столбца, плюс фамилии. Старт заявки: /manager/pacient/ без GUID, код проверяет хук формы t_analysis, затем адрес с GUID. Карточка черновика на этом адресе: общие поля и вариант form/pacient/{slug}.php, сохранение op[step]=card в TAnalysisHook, статус черновик, редирект на паспорт. Связи полей: плагин pacient-card, data-form-toggle и data-form-interactive. Отчество, номер материала, одно из полей прогрессирования AKT/PTEN, своё название анамнеза, степень родства, подтип BRCA от диагноза, предупреждение про один опухолевый блок. Списки карточки — custom-select. Текст, дата и список одной высоты рамки. Файл на десктопе — плагин file-dropzone, крестик очищает файл. Подпись поля — UC\\FormLabel, text-black. Семейный анамнез — сколько записей заполнено, «Другое» (6) показывает название и родство. Заголовок блока — UC\\FormBlockTitle, без margin. Блоки полей — UC\\FormCard: светло-серый фон, тень shadow-md через var(--shadow-md), в тёмной теме тёмный фон и белый текст. Слоты сканов есть, в базу они ещё не пишутся. Пустые view_/cnt_/user_/stat_ карточки пишутся как 0. stat_hasprogress — радио 1 или 2, не галка: 2 не превращается в 1. После сохранения карточки открывается паспорт /manager/passport/{guid}/. Форма лаборатории ещё не собрана. В конце таблицы колонка «Действия»: ссылки и меню воркфлоу, то же на карточке врача."
     },
     {
       "path": "project/readme/codes.md",
@@ -116,21 +125,49 @@
         "ФИО",
         "лаборатория"
       ],
-      "summary": "Страница /manager/mant_code/. Кнопка «Создать пул кодов» пишет N кодов в t_code для типа анализа (HRD, AKT, BRCA, HRR, PTEN), без строки t_events. Правки нет. Удалить можно только неактивированный код. Фильтры: «Только неактивированные» и «Только активированные»; оба сразу — пустой список. author_add и user_activate показывают ФИО из t_users. У лабораторных входов в имени название лаборатории, фамилия пустая."
+      "summary": "Страница /manager/mant_code/. Кнопка «Создать пул кодов» слева в тулбаре, рядом с «Добавить запись». Она пишет N кодов в t_code для типа анализа (HRD, AKT, BRCA, HRR, PTEN), без строки t_events. Правки нет. Удалить можно только неактивированный код. Фильтры: «Только неактивированные» и «Только активированные»; оба сразу — пустой список. author_add и user_activate показывают ФИО из t_users. У лабораторных входов в имени название лаборатории, фамилия пустая. Трата кода — форма /manager/pacient/: хук t_analysis пишет user_activate и date_activate."
+    },
+    {
+      "path": "project/readme/pdf.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["pdf", "заключение", "печать", "tbldynelements", "PRINTPDF", "роль", "тип анализа"],
+      "summary": "/pdf/{guid}/ собирает HTML заключения и отдаёт PDF. Шаблон — строка tbldynelements, номер зависит от view_test: 57 по умолчанию, AKT 63, MLPA 65, BRCA 71, HRR 76, PTEN 77. Роль шаблон не меняет: врач видит только свою заявку, спонсор и спонсор-аудит не видят ничего. Печать — отдельный RemoteHtmlToPdf, адрес PRINTPDF_URL. Сервис без сессии забирает HTML по create=1 и одноразовому токену. PRINTPDF_REMOTE=0 отдаёт этот HTML по самой ссылке, сервис не вызывается. Пустое значение и 1 — удалённая печать."
+    },
+    {
+      "path": "project/readme/block-expander.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["раскрыватель", "больше фильтров", "block-expander", "пилюля"],
+      "summary": "UC\\BlockExpander открывает контейнер data-plugin=block-expander. Подписи more и less — параметры. Плагин ставит пилюлю и прячет подблок data-block-expander-more. Стрелка — Arrows/arrow-down-s-line: вниз в закрытом состоянии, вверх в открытом. На списке анализов подписи «Больше фильтров» и «Меньше фильтров». Кнопка в подвале сайдбара и отделена от «Найти» gap-md. При открытых дополнительных полях подвал внизу, список полей скроллится. Кегль пилюли — text-xs."
     },
     {
       "path": "project/readme/ui-theme.md",
       "layer": "project",
       "role": "topic",
       "topics": ["тема", "светлая", "#ff7f22", "тултип", "лого", "скролл", "сайдбар", "мнемоника", "color-green"],
-      "summary": "Светлая тема кабинета: project/overrides/assets/config-light.css, акцент #ff7f22, чёрный сайдбар. Бегунок меню чуть светлее фона (#333, наведение #4a4a4a). Раскрытое подменю по высоте содержимого, вертикальные отступы ссылок вдвое меньше ядра. Мнемоники списка пациентов — --color-* и --color-bg-* из легаси uikit.css, pink — --pink из lu-original.css. Короткие --blue и --green из lu-original список не использует. В разметке hex не пишется. Магазинный шрифт test не копировали."
+      "summary": "Hex только у пигментов: светлый кабинет — html.theme-light в core/assets/config.css, тёмная тема — html.theme-dark, база до темы — config-default.css. Мнемоника (primary, promo, danger-dark, secondary-light, bg-*) смотрит на пигмент через var(). config-light.css hex не пишет: там кегль 18px и 15px до 768px, меню, шапка, строка статуса. Тень блока и модалки — классы shadow-sm…shadow-xl, переменные --shadow-* без сдвига вниз. Панель подразделов свёрнутого меню в светлой теме чёрная, ссылки как у сайдбара. Обычная строка таблицы — --color-light, шапка белая, uppercase. Бегунок меню — graphite и ash. Ckeditor и swiper со своим hex не трогаем."
     },
     {
       "path": "project/readme/admin-settings.md",
       "layer": "project",
       "role": "topic",
       "topics": ["настройки", "имперсонализация", "вход под пользователем"],
-      "summary": "Кнопка «Настройки» — ядерный сайдбар. Проектный panel.php добавляет вход под пользователем."
+      "summary": "Кнопка «Настройки» — ядерный сайдбар. Проектный panel.php добавляет вход под пользователем между карточкой пользователя и блоком «Шаблон страницы». Во время имперсонализации «Отмена входа» сверху, под ней тот же список: можно сменить учётку, не выходя к администратору. На кнопке учётки слева подпись, справа #id (d-flex justify-between)."
+    },
+    {
+      "path": "core/readme/auth.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["вход", "лимит", "брутфорс", "AUTH_LOGIN_MAX_ATTEMPTS", "tblauth_attempt"],
+      "summary": "AuthManager::login() финальный: сначала лимит неудач, потом проектный authenticate(). Корзины — логин и REMOTE_ADDR, таблица tblauth_attempt. По умолчанию 5 попыток за 15 минут из env AUTH_LOGIN_MAX_ATTEMPTS и AUTH_LOGIN_WINDOW_MINUTES. Ноль выключает. Проект переопределяет loginAttemptLimit(): null снимает лимит. Куку AUTH_KEY ядро не ставит."
+    },
+    {
+      "path": "core/readme/sidebar.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["сайдбар", "меню", "свёрнутый", "подменю", "sidebar-flyout"],
+      "summary": "Плагин sidebar сворачивает левую колонку до иконок. Наведение на раздел, за которым сразу идёт .sub-menu или .nav-submenu, открывает справа .sidebar-flyout с копией подменю. Фон берётся у сайдбара, если заливка непрозрачная. До 768px панель не показывается: сайдбар выезжает целиком. Пункт без детей по-прежнему даёт тултип с названием."
     },
     {
       "path": "core/readme/INDEX.md",
@@ -144,14 +181,35 @@
       "layer": "core",
       "role": "topic",
       "topics": ["DynBlock", "фильтр", "flag", "filter_fields", "toolbar_extra", "varc", "unix"],
-      "summary": "Запрос грида, JOIN, фильтры. Слот toolbar_extra. Тип фильтра flag — один чекбокс. Дополнительные фильтры без столбца — config.filter_fields. В admin-table type varc — текстовое поле, type number — диапазон. compare date и unix в filterColumnExpressions сравнивают календарь, не DECIMAL. Подпись фильтра берётся из label столбца."
+      "summary": "Запрос грида, JOIN, фильтры. Слоты тулбара: toolbar_left слева, toolbar_extra справа. Кнопка «Информация» в фильтрах закомментирована. Тип фильтра flag — один чекбокс. Дополнительные фильтры без столбца — config.filter_fields. В admin-table type varc — текстовое поле, type number — диапазон. compare date и unix в filterColumnExpressions сравнивают календарь, не DECIMAL. Подпись фильтра берётся из label столбца. Ajax списка: есть tbody — меняются строки, нет таблицы — в dynblock-container пишется content. Пейджинатор обновляется отдельно."
     },
     {
       "path": "core/readme/forms.md",
       "layer": "core",
       "role": "topic",
-      "topics": ["форма", "хук", "beforeDelete", "t_code"],
-      "summary": "Универсальная форма справочника. Хук таблицы может отменить удаление: для t_code активированный код не удаляется. Поле catlink догружает названия страниц пачкой id, потолок 500; поиск по строке в том же методе до 50."
+      "topics": ["форма", "хук", "beforeDelete", "t_code", "t_analysis", "проверочный код"],
+      "summary": "Универсальная форма справочника. Хук таблицы может отменить удаление: для t_code активированный код не удаляется. Старт заявки — хук t_analysis, op[step]=code. Поле image/document — плагин file-dropzone: превью, крестик очищает, клик выбирает другой файл. Поле catlink догружает названия страниц пачкой id, потолок 500; поиск по строке в том же методе до 50."
+    },
+    {
+      "path": "core/readme/tokens.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["кегль", "rem", "отступ", "space-unit", "шрифт", "токен", "палитра"],
+      "summary": "Корень html font-size в ядре 16px. --text-* — доли rem от него, --space-* — множители --space-unit 0.25rem. Цвета — --color-*. Проект перебивает их на html.theme-light и html.theme-dark: голый html проигрывает позднему font-size из config.css. OMGO ставит корень 18px, до 768px — 15px."
+    },
+    {
+      "path": "core/readme/errors.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["ошибка", "info", "warning", "formError", "форма", "крестик"],
+      "summary": "UC\\Errors::formError красный, formInfo синий (bg-blue), formWarning жёлтый (bg-yellow). Текст всех трёх белый. Крестик — text-white, удаляет блок со страницы и не пишет закрытие в сессию или localStorage. Внешнего margin нет."
+    },
+    {
+      "path": "core/readme/request.md",
+      "layer": "core",
+      "role": "topic",
+      "topics": ["запрос", "мобильный", "isMobile", "iPad", "User-Agent"],
+      "summary": "Request::isMobile() отличает телефон от десктопа по User-Agent, не по ширине окна. iPad не мобильный. Android мобильный. Параметр ?mobile включает телефонную ветку при любом значении. Список заявок ставит кнопку сверху только в этой ветке."
     },
     {
       "path": "core/readme/migrate-legacy.md",

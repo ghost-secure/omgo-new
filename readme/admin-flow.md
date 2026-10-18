@@ -35,7 +35,9 @@
 
 Пул кодов: `POST /jsapi/admin/code-pool` (`CodePoolHandler`). Контекст страницы, не строки: `flow_id=codes`, `action=WF_CODEPULL`, `dataid=0`, `table=t_code`. После успеха модалка закрывается, грид кодов перечитывается. Форма и кнопка — [codes.md](codes.md).
 
-`Flow::button` с `variant=toolbar` — кнопка в правой группе тулбара (иконка + подпись, как «Выгрузить в Excel»). Слот: `toolbar_extra` в config DynBlock.
+Воркфлоу заявки: id `analysis`, `table=t_analysis`, `dataid` = `cat` строки, `action` = id операции. Форма `flow/analysis.php`, запись `POST /jsapi/admin/analysis-event`. Мгновенные операции модалку не открывают. Меню и статусы — [analysis-workflow.md](analysis-workflow.md).
+
+`Flow::button` с `variant=toolbar` — иконка и подпись, как у кнопок вида. Сторону задаёт слот config: `toolbar_left` слева (кнопки экрана, рядом с «Добавить запись»), `toolbar_extra` справа (рядом с «Фильтры» и «Выгрузить в Excel»). Пул кодов — слева.
 
 ## Файлы
 
@@ -53,6 +55,18 @@
 Легаси-аналог: [legacy-wf.md](legacy-wf.md).
 
 ## История логики
+
+### 2026-10-18 — сторона кнопки флоу
+
+- **Тип:** правка неверной логики
+- **Было:** `variant=toolbar` описан как правая группа, слот `toolbar_extra`
+- **Стало:** вид кнопки задаёт `variant`, сторону — слот. Пул кодов в `toolbar_left`
+
+### 2026-10-15 — сценарий заявки
+
+- **Тип:** новая логика
+- **Было:** в белом списке флоу только `route` и `codes`
+- **Стало:** сценарий `analysis` и `POST /jsapi/admin/analysis-event`. Поведение меню — [analysis-workflow.md](analysis-workflow.md)
 
 ### 2026-10-11 — пул кодов и кнопка тулбара
 
