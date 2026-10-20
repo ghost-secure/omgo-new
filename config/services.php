@@ -83,7 +83,7 @@ return [
         \Services\Pdf\ConclusionPrint::class => function ($c) {
             return new \Services\Pdf\ConclusionPrint(
                 $c->get(\Services\Pdf\ConclusionDocument::class),
-                new \Services\Pdf\ConclusionAccess(),
+                $c->get(\Services\AnalysisService::class),
                 new \Services\Pdf\ConclusionPrintToken(),
                 $c->get(\Services\Pdf\HtmlToPdfConverter::class),
                 $c->get(\Services\Pdf\PrintFailureAlert::class),

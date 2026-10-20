@@ -78,6 +78,9 @@ class AnalysisService
     public const STATUS_PTEN = 17;
     public const STATUS_MLPA = 18;
 
+    /** Текст отказа, когда роль не открывает заявку. */
+    public const VIEW_DENIED = 'Нет доступа для вашей учетной записи.';
+
     /** Легаси `Analysis::PTEN_EXPRESSION_*`: текст результата ИГХ. */
     public const PTEN_EXPRESSION_LOSS = 'Выпадение экспрессии белка PTEN ОБНАРУЖЕНО';
     public const PTEN_EXPRESSION_PRESENT = 'Выпадение экспрессии белка PTEN НЕ ОБНАРУЖЕНО';
@@ -455,6 +458,35 @@ END';
         }
 
         return ['add_button' => $add, 'doctor' => $doctor, 'where' => $where];
+    }
+
+    /**
+     * Кто открывает заявку: паспорт, PDF и тот же просмотр дальше.
+     * Врач — только свою (`user_doctor`). Спонсор и спонсор-аудит — нет.
+     * Лаборатория, администратор и суперадмин проходят.
+     *
+     * @param array<string, mixed>|null $user auth()->getUser()
+     * @param array<string, mixed> $analysis строка t_analysis
+     */
+    public function denyReason(?array $user, array $analysis): ?string
+    {
+        if ($user === null) {
+            return self::VIEW_DENIED;
+        }
+
+        $roles = is_array($user['roles_map'] ?? null) ? $user['roles_map'] : [];
+        $uid = (int) ($user['id'] ?? 0);
+        $doctorId = (int) ($analysis['user_doctor'] ?? 0);
+        $has = static fn (int $role): bool => array_key_exists($role, $roles);
+
+        if ($has(RoleService::ROLE_DOCTOR) && $uid !== $doctorId) {
+            return self::VIEW_DENIED;
+        }
+        if ($has(RoleService::ROLE_SPONSOR) || $has(RoleService::ROLE_SPONSOR_AUDIT)) {
+            return self::VIEW_DENIED;
+        }
+
+        return null;
     }
 
     /**

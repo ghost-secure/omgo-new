@@ -9,7 +9,7 @@
 | Сервис | Легаси | Сейчас |
 |--------|--------|--------|
 | `Services\RoleService` | `Object\Role\Role` | константы `t_roles.cat` |
-| `Services\AnalysisService` | `Object\Analysis\Analysis` | типы и статусы заявки, грид, карточка черновика (`draftByGuid`, `prepareDraftSave`). См. [patients.md](patients.md) |
+| `Services\AnalysisService` | `Object\Analysis\Analysis` | типы и статусы заявки, грид, карточка черновика (`draftByGuid`, `prepareDraftSave`), кто открывает заявку (`denyReason`). См. [patients.md](patients.md) |
 | `Services\AnalysisWorkflowService` | `Replace` + `aftersave/t_events.php` | меню `t_wf`, запись события, смена статуса. См. [analysis-workflow.md](analysis-workflow.md) |
 | `Services\CodeService` | `Object\Code\Code` | пул `t_code`: префикс типа + два блока по 4 символа; `isActivated`, SQL свободного/активированного, ФИО. См. [codes.md](codes.md) |
 | `Services\Pdf\ConclusionDocument` | `Object\PDF\PDF` | HTML заключения из `tbldynelements`, блок по типу анализа. См. [pdf.md](pdf.md) |
@@ -39,11 +39,17 @@
 
 `analysisGridQuery()` — JOIN и `addSelect` грида заявок (код пациента, ФИО, дубль, регионы, мнемоники `status_color` и `test_color`). Туда же SQL фильтров виртуальных столбцов, фамилий и unix-дат материала. Один и тот же запрос у списка `/manager/mant_pacient/` и у паспорта врача. Фильтр по роли в метод не входит: его задаёт `pacientListScope()`. Раскраска и панель фильтров включены только у `t_analysis/list`. См. [patients.md](patients.md).
 
-`pacientListScope()` — кнопка «Добавить пациента», WHERE списка по роли и флаг `doctor` (последняя роль — врач: на телефоне карточки `t_analysis/doctor-mobile`). `unfinishedCodeDraftGuid()` — заявка, где код уже потрачен, а пациент ещё не записан. `routeLabId()` — лаборатория новой заявки из маршрута врача, для PTEN без маршрута лаборатория 3. `pacientFormUrl()` — `/manager/pacient/` и тот же адрес с GUID. `addPacientButtonHtml()` — разметка «Добавить пациента»: на десктопе её вставляет `toolbar_left` списка, на телефоне страница ставит её над гридом.
+`pacientListScope()` — кнопка «Добавить пациента», WHERE списка по роли и флаг `doctor` (последняя роль — врач: на телефоне карточки `t_analysis/doctor-mobile`). `denyReason()` — кто открывает одну заявку: паспорт, PDF и тот же просмотр дальше. Врач проходит только если `t_analysis.user_doctor` равен id учётки. Спонсор и спонсор-аудит не проходят. Лаборатория, администратор и суперадмин проходят. Отказ — `VIEW_DENIED`. Это не фильтр списка: в списке спонсор строки видит. `unfinishedCodeDraftGuid()` — заявка, где код уже потрачен, а пациент ещё не записан. `routeLabId()` — лаборатория новой заявки из маршрута врача, для PTEN без маршрута лаборатория 3. `pacientFormUrl()` — `/manager/pacient/` и тот же адрес с GUID. `addPacientButtonHtml()` — разметка «Добавить пациента»: на десктопе её вставляет `toolbar_left` списка, на телефоне страница ставит её над гридом.
 
 `CodeService::findIdleCode()` / `activate()` — проверка и трата кода на старте заявки. `date_activate` пишется unix-числом.
 
 ## История логики
+
+### 2026-10-20 — доступ к заявке в AnalysisService
+
+- **Тип:** правка неверной логики
+- **Было:** правило «врач только своя заявка, спонсор не проходит» лежало в `Services\Pdf\ConclusionAccess`. Паспорт вызывал PDF-класс
+- **Стало:** `AnalysisService::denyReason`. Паспорт и PDF вызывают его
 
 ### 2026-10-17 — просмотр заключения без сервиса
 
