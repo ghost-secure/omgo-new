@@ -10,22 +10,20 @@
 
 ## Какой шаблон
 
-Роль шаблон не выбирает. Номер строки `tbldynelements` зависит от `t_analysis.view_test`:
+Роль шаблон не выбирает. Папка зависит от `t_analysis.view_test`. В папке два файла, как у грида: `config.php` и `template.php`. Это `project/UC/dynblock/t_analysis/conclusion/{папка}/`.
 
-| Тип | Блок | Имя в таблице |
-|-----|------|----------------|
-| AKT, AKT+BRCA | 63 | Заключение AKT |
-| MLPA | 65 | Заключение MLPA |
-| BRCA | 71 | Заключение BRCA |
-| HRR | 76 | Заключение HRR |
-| PTEN | 77 | Заключение PTEN |
-| остальные (HRD, NGS) | 57 | Заключение |
+| Тип | Папка |
+|-----|--------|
+| AKT, AKT+BRCA | `akt` |
+| MLPA | `mlpa` |
+| BRCA | `brca` |
+| HRR | `hrr` |
+| PTEN | `pten` |
+| остальные (HRD, NGS) | `default` |
 
-Берутся `pHeader`, `pBody`, `pFooter`. Разметка легаси: `[=поле=]`, `[=поле=val=]`, `[=поле=nl2br=]`, `filled::`, `{if ?=}`, `{{ if }}` / `{{ elseif }}` / `{{ endif }}`, `{{ materials }}`, `{{ expressionprotein }}`, `[N_ID]`, `{param=rootpage}`.
+`ConclusionDocument::html()` открывает `DynBlock` с `conclusionQuery()`: пациент, врач, тип, лаборатория, методика лаборатории. Условия, «поле заполнено», даты и подписи справочников — PHP в `template.php` и `UC\ConclusionView`. Общие куски (шапка документа, материалы, блок HRD, метрики, подпись) тоже PHP, не отдельные html-файлы.
 
-Строка для подстановки — заявка с пациентом, врачом, типом, лабораторией и методикой лаборатории (легаси preset `pacientdata`). `view_*` и `multiselect_*` подписываются через `tblfields.table_ext` / `column_ext`. Даты `date_*` и `datetext_*` выводятся как `d.m.Y`.
-
-`{{ materials }}`: у MLPA фиксированная кровь; иначе отмеченные материалы и их маркировка. `{{ expressionprotein }}` — две готовые фразы ИГХ PTEN по `varc_result`.
+Материалы: у MLPA фиксированная кровь; иначе отмеченные материалы и их маркировка. Фраза ИГХ PTEN — `ConclusionView::expressionProtein()` по `varc_result`. Строки вариантов AKT и BRCA — записи `t_analysis_onko` с `view_analysis` = id заявки. Метрики качества печатаются, если заполнена хотя бы одна глубина прочтений.
 
 После сборки HTML сжимается так же, как `PDF::clearHTML`: переводы строк в пробел, пробелы вокруг тегов снимаются.
 
@@ -62,6 +60,18 @@
 Другая реализация печати подменяется через `HtmlToPdfConverter` в `project/config/services.php`.
 
 ## История логики
+
+### 2026-10-20 — шаблон заключения как dynblock
+
+- **Тип:** правка неверной логики
+- **Было:** текст заключения — html с разметкой `[=поле=]` и `{if}`, его разбирал `ConclusionMarkup`
+- **Стало:** папка `t_analysis/conclusion/{тип}` с `config.php` и `template.php`. Условия и модификаторы — PHP. Запрос строки — `conclusionQuery()`
+
+### 2026-10-20 — шаблон заключения в файлах
+
+- **Тип:** правка неверной логики
+- **Было:** `pHeader`, `pBody`, `pFooter` читались из `tbldynelements` (57, 63, 65, 71, 76, 77)
+- **Стало:** те же тексты лежали файлами `header.html`, `body.html`, `footer.html`. Этот шаг сменил следующий: файлы заменены на `template.php`
 
 ### 2026-10-20 — доступ к заявке не в группе PDF
 

@@ -75,8 +75,7 @@ return [
 
         \Services\Pdf\ConclusionDocument::class => function ($c) {
             return new \Services\Pdf\ConclusionDocument(
-                $c->get(\Core\Database\QueryBuilder::class),
-                $c->get(\Core\Config::class)
+                $c->get(\Core\Database\QueryBuilder::class)
             );
         },
 

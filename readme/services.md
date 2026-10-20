@@ -12,7 +12,7 @@
 | `Services\AnalysisService` | `Object\Analysis\Analysis` | типы и статусы заявки, грид, карточка черновика (`draftByGuid`, `prepareDraftSave`), кто открывает заявку (`denyReason`). См. [patients.md](patients.md) |
 | `Services\AnalysisWorkflowService` | `Replace` + `aftersave/t_events.php` | меню `t_wf`, запись события, смена статуса. См. [analysis-workflow.md](analysis-workflow.md) |
 | `Services\CodeService` | `Object\Code\Code` | пул `t_code`: префикс типа + два блока по 4 символа; `isActivated`, SQL свободного/активированного, ФИО. См. [codes.md](codes.md) |
-| `Services\Pdf\ConclusionDocument` | `Object\PDF\PDF` | HTML заключения из `tbldynelements`, блок по типу анализа. См. [pdf.md](pdf.md) |
+| `Services\Pdf\ConclusionDocument` | `Object\PDF\PDF` | HTML заключения: `DynBlock` `t_analysis/conclusion/{тип}`, запрос `conclusionQuery()`. См. [pdf.md](pdf.md) |
 | `Services\Pdf\RemoteHtmlToPdf` | curl в `form/pdf.php` | POST на `PRINTPDF_URL`. Реализация `HtmlToPdfConverter`. `PRINTPDF_REMOTE=0` сервис не вызывает, ссылка отдаёт HTML |
 | `Services\AuthFormsService` | `web/auth_.php`, `reg_.php`, `recover_.php` | вход, регистрация врача, новый пароль. См. [auth-and-menu.md](auth-and-menu.md) |
 | `Services\AddressLookupService` | `Object\Dadata\Dadata::addCache` | кэш `t_dadata` и подсказка адреса, токен `DADATA_TOKEN` |
