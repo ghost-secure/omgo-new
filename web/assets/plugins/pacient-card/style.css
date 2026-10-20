@@ -1,0 +1,5 @@
+[data-pacient-card] .form-field.is-invalid input:not(.custom-control-input),
+[data-pacient-card] .form-field.is-invalid textarea,
+[data-pacient-card] .form-field.is-invalid .custom-select-trigger {
+    border-color: var(--color-danger);
+}

@@ -2,7 +2,7 @@
 
 Кабинет лаборатории на новом ядре. Магазин из `test/project` не копируем.
 
-Репозиторий этой папки: [ghost-secure/omgo-new](https://github.com/ghost-secure/omgo-new.git). Ядро (`omgo`) `/project` не коммитит. `.gitignore` как у test: `/web/`, `/scripts/deploy/deploy.config`.
+Репозиторий этой папки: [ghost-secure/omgo-new](https://github.com/ghost-secure/omgo-new.git). Ядро (`omgo`) `/project` не коммитит. `project/web` — плагины этого же репозитория, не отдельная вёрстка. В `.gitignore` остаётся только `/scripts/deploy/deploy.config`.
 
 | Слой | Каталог | Карта |
 |------|---------|-------|

@@ -1,0 +1,28 @@
+a.analysis-ops {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+a.analysis-ops .analysis-ops__arrow {
+    width: 1em;
+    height: 1em;
+    transition: transform 0.15s ease;
+}
+
+[data-plugin="dropdown"].is-open .analysis-ops__arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu.dropdown-menu--fit {
+    width: max-content;
+    min-width: 0;
+    max-width: calc(100vw - 1rem);
+    align-items: flex-start;
+}
+
+.dropdown-menu.dropdown-menu--fit .btn {
+    width: auto;
+    white-space: nowrap;
+}
