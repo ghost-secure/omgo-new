@@ -81,7 +81,7 @@
       "layer": "project",
       "role": "topic",
       "topics": ["адреса", "паспорт врача", "mant_pacient", "GUID", "pacient"],
-      "summary": "/ и /manager/ ведут на /manager/mant_pacient/. Паспорт врача — /manager/doctor/{cat}/. Форма пациента открыта: /manager/pacient/ без GUID и /manager/pacient/{guid}/. PDF заключения — /pdf/{guid}/. Номера страниц — Helpers\\Page. Паспорт анализа /manager/passport/{guid}/: шапка всегда видна, ниже кнопки вкладок UC\\TabSet, открыта одна панель. Строка свойства — UC\\PropLine, подпись синяя и жирная. Группа характеристик — UC\\PropGroup: внутри gap-sm, между группами gap-md. Форма лаборатории по GUID ещё не включена."
+      "summary": "/ и /manager/ ведут на /manager/mant_pacient/. Паспорт врача — /manager/doctor/{cat}/. Форма пациента открыта: /manager/pacient/ без GUID и /manager/pacient/{guid}/. PDF заключения — /pdf/{guid}/, каталог не читает. Номера страниц — Helpers\\Page. Паспорт анализа /manager/passport/{guid}/: шапка всегда видна, ниже кнопки вкладок UC\\TabSet, открыта одна панель. Строка свойства — UC\\PropLine, подпись синяя и жирная. Группа характеристик — UC\\PropGroup: внутри gap-sm, между группами gap-md. Форма лаборатории по GUID ещё не включена."
     },
     {
       "path": "project/readme/legacy-wf.md",
@@ -132,7 +132,7 @@
       "layer": "project",
       "role": "topic",
       "topics": ["pdf", "заключение", "печать", "tbldynelements", "PRINTPDF", "роль", "тип анализа"],
-      "summary": "/pdf/{guid}/ собирает HTML заключения и отдаёт PDF. Шаблон — строка tbldynelements, номер зависит от view_test: 57 по умолчанию, AKT 63, MLPA 65, BRCA 71, HRR 76, PTEN 77. Роль шаблон не меняет: врач видит только свою заявку, спонсор и спонсор-аудит не видят ничего. Печать — отдельный RemoteHtmlToPdf, адрес PRINTPDF_URL. Сервис без сессии забирает HTML по create=1 и одноразовому токену. PRINTPDF_REMOTE=0 отдаёт этот HTML по самой ссылке, сервис не вызывается. Пустое значение и 1 — удалённая печать."
+      "summary": "/pdf/{guid}/ — стратегия печати, каталог и шаблон страницы не читает. Собирает HTML заключения и отдаёт PDF. Шаблон — строка tbldynelements, номер зависит от view_test: 57 по умолчанию, AKT 63, MLPA 65, BRCA 71, HRR 76, PTEN 77. Роль шаблон не меняет: врач видит только свою заявку, спонсор и спонсор-аудит не видят ничего. Печать — отдельный RemoteHtmlToPdf, адрес PRINTPDF_URL. Сервис без сессии забирает HTML по create=1 и одноразовому токену. PRINTPDF_REMOTE=0 отдаёт этот HTML по самой ссылке, сервис не вызывается. Пустое значение и 1 — удалённая печать."
     },
     {
       "path": "project/readme/block-expander.md",

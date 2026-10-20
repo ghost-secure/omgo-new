@@ -13,7 +13,7 @@ use Helpers\Page;
  * Легаси project/logic/index.php: шаблон адреса → страница каталога и параметр из URL.
  * Включены вход в кабинет (/manager/), паспорт врача, форма пациента
  * (/manager/pacient/ без GUID и /manager/pacient/{guid}/), паспорт анализа
- * /manager/passport/{guid}/ и PDF /pdf/{guid}/.
+ * /manager/passport/{guid}/. PDF /pdf/{guid}/ каталог не читает: это печать, не страница.
  * Форма лаборатории — plannedGuidRoutes(), match() её не отдаёт.
  */
 class LegacyUrlStrategy implements RouteStrategy
@@ -32,7 +32,7 @@ class LegacyUrlStrategy implements RouteStrategy
             return $pacient;
         }
 
-        $pdf = $this->matchPdf($urlParts, $repository);
+        $pdf = $this->matchPdf($urlParts);
         if ($pdf !== null) {
             return $pdf;
         }
@@ -102,7 +102,7 @@ class LegacyUrlStrategy implements RouteStrategy
         return new RouteMatch([$manager, $page], $page, $attributes, $attributes);
     }
 
-    private function matchPdf(array $urlParts, PageRepository $repository): ?RouteMatch
+    private function matchPdf(array $urlParts): ?RouteMatch
     {
         if (count($urlParts) !== 2 || $urlParts[0] !== 'pdf') {
             return null;
@@ -111,12 +111,19 @@ class LegacyUrlStrategy implements RouteStrategy
             return null;
         }
 
-        $page = $repository->findBySlug('pdf');
-        if (!$page || $page->id !== Page::PDF) {
-            return null;
-        }
-
-        $attributes = ['analysis_guid' => strtolower($urlParts[1])];
+        $guid = strtolower($urlParts[1]);
+        $page = new \Core\Page\Page(
+            id: 0,
+            name: 'PDF',
+            mapurl: 'pdf/' . $guid,
+            id_up: null,
+            html: null,
+            php: 'form/pdf.php',
+            pattern: null,
+            patternId: null,
+            status: 1,
+        );
+        $attributes = ['analysis_guid' => $guid];
 
         return new RouteMatch([$page], $page, $attributes, $attributes);
     }

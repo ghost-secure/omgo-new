@@ -1,6 +1,6 @@
 # Заключение PDF
 
-Адрес `/pdf/{guid}/`, GUID — `t_analysis.varc_guid`. Страница `Helpers\Page::PDF` (`catalog.id` 69), php `project/phpfiles/form/pdf.php`. Шаблон страницы — пустой `_empty.htm`: в ответ не попадает кабинет `light.php`.
+Адрес `/pdf/{guid}/`, GUID — `t_analysis.varc_guid`. Это стратегия печати, не страница каталога: `matchPdf()` каталог не читает и оболочку не подключает. Тело ответа собирает `project/phpfiles/form/pdf.php`.
 
 Легаси: `project/phpfiles/form/pdf.php` и `Object\PDF\PDF`.
 
@@ -70,6 +70,12 @@
 Другая реализация печати подменяется через `HtmlToPdfConverter` в `project/config/services.php`.
 
 ## История логики
+
+### 2026-10-20 — адрес печати без каталога
+
+- **Тип:** правка неверной логики
+- **Было:** `matchPdf()` читал строку `catalog` и оборачивал ответ в пустой `_empty.htm`, чтобы не подключить кабинет
+- **Стало:** стратегия сама отдаёт `form/pdf.php` без шаблона. Каталог для этого адреса не читается
 
 ### 2026-10-17 — локальный просмотр HTML
 

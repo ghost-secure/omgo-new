@@ -20,7 +20,7 @@ class Page
     /** /manager/passport/{guid}/ — паспорт анализа. */
     public const PASSPORT = 65;
 
-    /** /pdf/{guid}/ — PDF анализа. */
+    /** Легаси catalog.id заключения. Адрес /pdf/{guid}/ эту строку не читает. */
     public const PDF = 69;
 
     /** /manager/doctor/{id}/ — паспорт врача. */

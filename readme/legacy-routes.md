@@ -46,7 +46,7 @@
 
 ## PDF заключения
 
-`/pdf/{guid}/` — `t_analysis.varc_guid`. Страница `Helpers\Page::PDF`, `mapurl = pdf`, php `form/pdf.php`, шаблон `tblpagepatterns.patfile = _empty.htm` (`project/templates/_empty.htm`). `catalog.status = 0`: иерархия адрес не открывает, его отдаёт `matchPdf()`. Параметр: `analysis_guid`.
+`/pdf/{guid}/` — `t_analysis.varc_guid`. Это не страница каталога: `matchPdf()` строку не читает и шаблон не подключает. Тело — `form/pdf.php`. Параметр: `analysis_guid`.
 
 Шаблон, роли и внешняя печать — [pdf.md](pdf.md).
 
@@ -87,6 +87,12 @@
 - **Тип:** новая логика
 - **Было:** `/manager/passport/{guid}/` только в `plannedGuidRoutes()`
 - **Стало:** `matchPassport()` открывает `web/passport.php`. Карточка блоков 49 и 61
+
+### 2026-10-20 — PDF без строки каталога
+
+- **Тип:** правка неверной логики
+- **Было:** `matchPdf()` открывал страницу `catalog` и пустой шаблон `_empty.htm`
+- **Стало:** адрес печати собирается без каталога и без шаблона. Сборка — [pdf.md](pdf.md)
 
 ### 2026-10-17 — PDF по GUID
 
