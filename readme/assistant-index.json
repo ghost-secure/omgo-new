@@ -60,21 +60,21 @@
       "layer": "project",
       "role": "topic",
       "topics": ["миграция", "gen", "base", "простой", "сложный"],
-      "summary": "Простой легаси-gen переносится как DynBlock table/base без columns. Сложный (роли, JOIN, несколько blockid) — отдельный шаблон. t_pacient — грид t_analysis/list с фильтром роли и кнопкой «Добавить пациента». t_code остаётся base, столбцы собраны в config из-за ФИО."
+      "summary": "Простой легаси-gen переносится как DynBlock table/base без columns. Сложный (роли, JOIN, несколько blockid) — отдельный шаблон. t_pacient — грид t_analysis/list с фильтром роли и кнопкой «Добавить пациента». t_code остаётся base, столбцы собраны в config из-за ФИО. /manager/dokumenty/ динблоком не собирается: карточки в web/docs.php. Заголовок /manager/admin/users/ — «Пользователи», /manager/doctors/ — «Врачи»."
     },
     {
       "path": "project/readme/services.md",
       "layer": "project",
       "role": "reference",
       "topics": ["сервисы", "RoleService", "menuPageIds", "catlink_parent", "AnalysisService", "CodeService"],
-      "summary": "Проектные сервисы в project/Services, синглтоны в project/config/services.php. Роли кабинета — RoleService. menuPageIds отдаёт страницы сайдбара: null у суперадмина, иначе объединение catlink_parent. analysisGridQuery собирает грид заявок. pacientListScope режет список по роли и помечает врача флагом doctor для карточек на телефоне. AnalysisService::denyReason решает, кто открывает заявку: паспорт и PDF вызывают его, спонсор не проходит. AnalysisWorkflowService читает меню t_wf по первой роли roles_map и пишет событие. CodeService кроме пула ищет свободный код и помечает его потраченным. ConclusionDocument открывает DynBlock t_analysis/conclusion/{тип}: template.php и conclusionQuery(). RemoteHtmlToPdf печатает HTML по PRINTPDF_URL."
+      "summary": "Проектные сервисы в project/Services, синглтоны в project/config/services.php. DocumentService собирает вкладки документов из t_docs_type и строки t_docs. Роли кабинета — RoleService. menuPageIds отдаёт страницы сайдбара: null у суперадмина, иначе объединение catlink_parent. analysisGridQuery собирает грид заявок. pacientListScope режет список по роли и помечает врача флагом doctor для карточек на телефоне. AnalysisService::denyReason решает, кто открывает заявку: паспорт и PDF вызывают его, спонсор не проходит. AnalysisWorkflowService читает меню t_wf по первой роли roles_map и пишет событие. CodeService кроме пула ищет свободный код и помечает его потраченным. ConclusionDocument открывает DynBlock t_analysis/conclusion/{тип}: template.php и conclusionQuery(). RemoteHtmlToPdf печатает HTML по PRINTPDF_URL."
     },
     {
       "path": "project/readme/doctors.md",
       "layer": "project",
       "role": "topic",
       "topics": ["врачи", "doctors", "ROLE_LAB", "маршрут"],
-      "summary": "/manager/doctors/: не лаборатория видит t_users/doctors, лаборатория — t_users/doctors_lab без столбца «Маршрут». Врач отбирается EXISTS по view_role, не JOIN матрицы."
+      "summary": "/manager/doctors/: не лаборатория видит t_users/doctors, лаборатория — t_users/doctors_lab без столбца «Маршрут». Заголовок грида — «Врачи», не имя справочника «1. Пользователи». Врач отбирается EXISTS по view_role, не JOIN матрицы."
     },
     {
       "path": "project/readme/legacy-routes.md",
@@ -112,6 +112,13 @@
       "summary": "Пациент и анализ — одна заявка t_analysis, отдельного списка пациентов нет. /manager/mant_pacient/ — грид t_analysis/list. Первые столбцы: ФИО пациента, Анализ, Статус, дальше набор блока 54. Фильтр #ID — строка 1,2,5-10 и кнопка в шапке столбца. Паспорт врача этот порядок не берёт. Пустые «Статус мутации» и «Статус HRD» (id 0) — прочерк, не цифра. Роль режет строки и показывает кнопку «Добавить пациента»: на телефоне над таблицей, на десктопе и iPad под ней, это Request::isMobile(), не ширина окна. Если последняя роль — врач и клиент мобильный, вместо таблицы карточки t_analysis/doctor-mobile (легаси id 66, не блок 44). Страница — колонка flex-column с gap-md: этот gap отделяет предупреждение от заголовка «Анализы». Группа характеристик UC\\PropGroup: внутри gap-sm, между группами обычный gap-md. На десктопе и iPad «Добавить пациента» слева в тулбаре грида, на телефоне над списком. Пробный проектный слой: тулбар над фильтрами. Слева «Добавить пациента», справа «Фильтры» и кнопки вида с подписью на десктопе. Панель фильтров — правый сайдбар 28rem, не шире экрана, высота экрана, поля колонкой, диапазон дат в одну строку, без горизонтальных линий: между группами gap-md. Шапка закрывает панель. Основные фильтры — фамилия пациента и фамилия врача, остальные прячет кнопка UC\\BlockExpander. Она в подвале и отделена от «Найти» gap-md. В ядро не перенесено. UC\\Errors::formError без внешнего margin, только внутренний padding. Крестик убирает полосу до обновления, закрытие не запоминается. Фон строки статуса и в тёмной теме, слева сплошная полоса мнемоники. Легенда: один образец на цвет, статусы через запятую; образец — бледный фон и левая полоса, как ячейка. Крестик прячет легенду на сутки через dismissible-info. Фон строки — var(--color-bg-*). Бейдж типа — класс bg-*. Фильтр есть у каждого столбца, плюс фамилии. Старт заявки: /manager/pacient/ без GUID, код проверяет хук формы t_analysis, затем адрес с GUID. Карточка черновика на этом адресе: общие поля и вариант form/pacient/{slug}.php, сохранение op[step]=card в TAnalysisHook, статус черновик, редирект на паспорт. Связи полей: плагин pacient-card, data-form-toggle и data-form-interactive. Отчество, номер материала, одно из полей прогрессирования AKT/PTEN, своё название анамнеза, степень родства, подтип BRCA от диагноза, предупреждение про один опухолевый блок. Списки карточки — custom-select. Текст, дата и список одной высоты рамки. Файл на десктопе — плагин file-dropzone, крестик очищает файл. Подпись поля — UC\\FormLabel, text-black. Семейный анамнез — сколько записей заполнено, «Другое» (6) показывает название и родство. Заголовок блока — UC\\FormBlockTitle, без margin. Блоки полей — UC\\FormCard: светло-серый фон, тень shadow-md через var(--shadow-md), в тёмной теме тёмный фон и белый текст. Слоты сканов есть, в базу они ещё не пишутся. Пустые view_/cnt_/user_/stat_ карточки пишутся как 0. stat_hasprogress — радио 1 или 2, не галка: 2 не превращается в 1. После сохранения карточки открывается паспорт /manager/passport/{guid}/. Форма лаборатории ещё не собрана. В конце таблицы колонка «Действия»: ссылки и меню воркфлоу, то же на карточке врача."
     },
     {
+      "path": "project/readme/docs.md",
+      "layer": "project",
+      "role": "topic",
+      "topics": ["документы", "dokumenty", "t_docs", "вкладки", "инструкции", "бланки"],
+      "summary": "/manager/dokumenty/ — список для пользователя, php web/docs.php. Вкладки UC\\TabSet по t_docs_type, в каждой карточки t_docs с тем же view_type. Строка justify-between: название и дата слева, кнопки открыть, скачать и видео справа. DocumentService::sections(). Шаблона динблока нет. Справочник mant_docs — это грид t_docs/base, другая страница. multiselect_roles список не фильтрует."
+    },
+    {
       "path": "project/readme/codes.md",
       "layer": "project",
       "role": "topic",
@@ -146,7 +153,7 @@
       "layer": "project",
       "role": "topic",
       "topics": ["тема", "светлая", "#ff7f22", "тултип", "лого", "скролл", "сайдбар", "мнемоника", "color-green"],
-      "summary": "Hex только у пигментов: светлый кабинет — html.theme-light в core/assets/config.css, тёмная тема — html.theme-dark, база до темы — config-default.css. Мнемоника (primary, promo, danger-dark, secondary-light, bg-*) смотрит на пигмент через var(). config-light.css hex не пишет: там кегль 18px и 15px до 768px, меню, шапка, строка статуса. Тень блока и модалки — классы shadow-sm…shadow-xl, переменные --shadow-* без сдвига вниз. Панель подразделов свёрнутого меню в светлой теме чёрная, ссылки как у сайдбара. Обычная строка таблицы — --color-light, шапка белая, uppercase. Бегунок меню — graphite и ash. Ckeditor и swiper со своим hex не трогаем."
+      "summary": "Hex только у пигментов: светлый кабинет — html.theme-light в core/assets/config.css, тёмная тема — html.theme-dark, база до темы — config-default.css. Мнемоника (primary, promo, danger-dark, secondary-light, bg-*) смотрит на пигмент через var(). config-light.css hex не пишет: там кегль 18px и 15px до 768px, меню, шапка, строка статуса. С 768px у логотипа кнопка-бургер System/menu-line, она открывает левый сайдбар. Тень блока и модалки — классы shadow-sm…shadow-xl, переменные --shadow-* без сдвига вниз. Панель подразделов свёрнутого меню в светлой теме чёрная, ссылки как у сайдбара. Обычная строка таблицы — --color-light, шапка белая, uppercase. Бегунок меню — graphite и ash. Ckeditor и swiper со своим hex не трогаем."
     },
     {
       "path": "project/readme/admin-settings.md",

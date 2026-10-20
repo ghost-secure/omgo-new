@@ -4,6 +4,25 @@
   "purpose": "Короткие проверенные ответы консультанта. Только то, что легко перепутать. Не каталог всех README.",
   "hotspots": [
     {
+      "intent": "заголовок страницы врачи пользователи 1. Пользователи t_users",
+      "answer_skeleton": "Оба списка на таблице t_users. Имя справочника «1. Пользователи» в заголовок этих страниц не попадает. /manager/doctors/ показывает «Врачи» (шаблоны doctors и doctors_lab, meta.title). /manager/admin/users/ показывает «Пользователи» (t_users/base).",
+      "forbid_generic": [
+        "заголовок берётся из tblview.name",
+        "страница врачей называется 1. Пользователи"
+      ],
+      "doc": "project/readme/doctors.md"
+    },
+    {
+      "intent": "документы /manager/dokumenty/ mant_docs t_docs динблок вкладки",
+      "answer_skeleton": "/manager/dokumenty/ — список для пользователя: web/docs.php, вкладки UC\\TabSet по t_docs_type, карточки t_docs из DocumentService. Шаблона динблока нет. Справочник строк — другая страница mant_docs, грид t_docs/base. multiselect_roles пользовательский список не режет.",
+      "forbid_generic": [
+        "документы кабинета это грид t_docs/base",
+        "на каждый тип свой шаблон динблока",
+        "список фильтруется по multiselect_roles"
+      ],
+      "doc": "project/readme/docs.md"
+    },
+    {
       "intent": "почему вход слетает после закрытия браузера сессия вечная как на test AUTH_KEY",
       "answer_skeleton": "Долгий вход — проектный Services\\AuthService, не ядро. Кука AUTH_KEY до 1 января 2030: логин, хэш tblusers.passwd и IP. Закрытие браузера стирает PHP-сессию omgo_auth_uid. Следующий заход читает куку, сверяет хэш и IP и снова пишет сессию. Смена пароля или другой IP куку гасят. Выход стирает обе. Вход под пользователем в куку не пишется. Лимит попыток — ядро AuthManager::login(), числа AUTH_LOGIN_MAX_ATTEMPTS и AUTH_LOGIN_WINDOW_MINUTES.",
       "forbid_generic": [

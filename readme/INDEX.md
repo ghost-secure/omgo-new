@@ -22,6 +22,7 @@
 | [legacy-wf.md](legacy-wf.md) | Легаси WF: `wf/*.php`, hash, `action.php`, `Lu::Block` |
 | [admin-flow.md](admin-flow.md) | Модалки кабинета: `FlowSignature`, `/jsapi/admin/flow` |
 | [codes.md](codes.md) | Проверочные коды: пул на `/manager/mant_code/` |
+| [docs.md](docs.md) | Документы кабинета: `/manager/dokumenty/` |
 | [pdf.md](pdf.md) | Заключение PDF: `/pdf/{guid}/`, шаблон по типу анализа, внешняя печать |
 | [patients.md](patients.md) | Заявка = пациент и анализ: список, код, карточка черновика |
 | [analysis-workflow.md](analysis-workflow.md) | Колонка «Действия»: ссылки и меню воркфлоу заявки |

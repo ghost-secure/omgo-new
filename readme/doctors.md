@@ -1,6 +1,6 @@
 # Интерфейс «Врачи»
 
-URL: [http://omgo/manager/doctors/](http://omgo/manager/doctors/).  
+URL: [http://omgo/manager/doctors/](http://omgo/manager/doctors/). Заголовок грида — «Врачи» (`meta.title`). Имя справочника `t_users` («1. Пользователи») на эту страницу не попадает: та же таблица у списка пользователей.  
 `catalog.php` = `web/doctors.php` (как в легаси). Два шаблона DynBlock, как два `blockid` легаси — не прячем столбец условием в одном config:
 
 | Роль | Легаси `tbldynelements` | Папка |
@@ -42,6 +42,12 @@ URL: [http://omgo/manager/doctors/](http://omgo/manager/doctors/).
 `custompatterns.php` / `pacientdata` на этой странице не используются.
 
 ## История логики
+
+### 2026-10-20 — заголовок «Врачи»
+
+- **Тип:** правка неверной логики
+- **Было:** грид показывал имя справочника `t_users`: «1. Пользователи». `meta.title` ядро не брало
+- **Стало:** заголовок «Врачи» из `meta.title` шаблонов `doctors` и `doctors_lab`
 
 ### 2026-10-07 — врачи на DynBlock
 

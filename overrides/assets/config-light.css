@@ -82,7 +82,7 @@ html.theme-light a:where(:not(.btn)):where(:not(.text-white)):hover {
     color: var(--color-blue);
 }
 
-/* Лого: десктоп 166×56, мобильный 130×40 + крестик (легаси logo.php) */
+/* Лого: десктоп 166×56, мобильный 130×40 + бургер меню (легаси logo.php) */
 html.theme-light .admin-layout > .brand {
     background-color: var(--color-black);
     border-bottom-color: var(--color-charcoal);
@@ -853,6 +853,8 @@ html.theme-dark .custom-control-input:checked + .radio-label::after {
 html.theme-light .tab-set,
 html.theme-dark .tab-set {
     position: relative;
+    min-width: 0;
+    max-width: 100%;
 }
 
 html.theme-light .tab-set__input,
@@ -884,6 +886,9 @@ html.theme-dark .tab-set__label {
 html.theme-light .tab-set__panel,
 html.theme-dark .tab-set__panel {
     display: none;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
 }
 
 html.theme-light .tab-set > .tab-set__input:nth-of-type(1):checked ~ .tab-set__bar > .tab-set__label:nth-child(1),

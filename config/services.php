@@ -61,6 +61,10 @@ return [
             return new \Services\CodeService($c->get(\Core\Database\QueryBuilder::class));
         },
 
+        \Services\DocumentService::class => function ($c) {
+            return new \Services\DocumentService($c->get(\Core\Database\QueryBuilder::class));
+        },
+
         \Services\Pdf\RemoteHtmlToPdf::class => function ($c) {
             return \Services\Pdf\RemoteHtmlToPdf::fromConfig($c->get(\Core\Config::class));
         },

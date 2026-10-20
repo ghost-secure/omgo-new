@@ -349,6 +349,7 @@ CODE
     
     'meta' => [
         'table_name' => 't_users',
+        'title' => 'Пользователи',
         'ui' => 'admin-table',
         'generated_at' => '2026-10-08 20:54:57',
         'version' => 2,

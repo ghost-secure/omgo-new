@@ -41,9 +41,23 @@
 
 Снаружи `gen/`: врачи — `web/doctors.php` → `t_users/doctors` (53) или `t_users/doctors_lab` (79, без маршрута), см. [doctors.md](doctors.md). Паспорт врача — `web/doctor-passport.php`: карточка `t_users/doctor-card` (58) и список `t_analysis/doctor-patients` (54, фильтр `user_doctor`), см. [legacy-routes.md](legacy-routes.md). Разные `blockid` легаси → разные папки DynBlock, не одно условие в config. Список маршрутов в модалке: `t_analysis_route/route-list` (легаси alias `route-list`).
 
-Пользователи: каталог `/manager/admin/users/` → `project/phpfiles/manager/users.php` → DynBlock `t_users/base`. Конфиг сгенерирован (`POST /jsapi/view/interface`, таблица `t_users`). В гриде видны поля профиля, которые включены в `tblfields`, плюс учётные из `tblusers` (логин, email, телефон, группа, статус аккаунта, даты). Скрыты: `view_region` и `view_status` (`tblfields.disabled = 1`), `passwd` / `salt` / `hash`. Колонка `address_dadata` показывает чистый адрес (`value` из JSON), не сам JSON. Шаблоны врачей `doctors` и `doctors_lab` генератор не трогает.
+Документы `/manager/dokumenty/` динблоком не собираются: карточка одна на все типы, её рисует `web/docs.php`. См. [docs.md](docs.md).
+
+Пользователи: каталог `/manager/admin/users/` → `project/phpfiles/manager/users.php` → DynBlock `t_users/base`. Заголовок грида — «Пользователи», не имя справочника «1. Пользователи». Конфиг сгенерирован (`POST /jsapi/view/interface`, таблица `t_users`). В гриде видны поля профиля, которые включены в `tblfields`, плюс учётные из `tblusers` (логин, email, телефон, группа, статус аккаунта, даты). Скрыты: `view_region` и `view_status` (`tblfields.disabled = 1`), `passwd` / `salt` / `hash`. Колонка `address_dadata` показывает чистый адрес (`value` из JSON), не сам JSON. Шаблоны врачей `doctors` и `doctors_lab` генератор не трогает.
 
 ## История логики
+
+### 2026-10-20 — заголовки врачей и пользователей
+
+- **Тип:** правка неверной логики
+- **Было:** оба списка `t_users` показывали имя справочника «1. Пользователи»
+- **Стало:** `/manager/doctors/` — «Врачи», `/manager/admin/users/` — «Пользователи»
+
+### 2026-10-20 — документы без шаблона динблока
+
+- **Тип:** новая логика
+- **Было:** страницы кабинета со списком собирались шаблоном DynBlock
+- **Стало:** `/manager/dokumenty/` рисует карточки в `web/docs.php`. Справочник `mant_docs` по-прежнему `t_docs/base`
 
 ### 2026-10-14 — роль и кнопка на списке заявок
 

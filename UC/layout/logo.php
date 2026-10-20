@@ -45,8 +45,8 @@ $omgoLogoSvg = static function (string $suffix, int $width, int $height): void {
 <?php if (!isset($omgoLogoWithClose) || $omgoLogoWithClose) { ?>
 <button type="button"
         class="brand-sidebar-close"
-        aria-label="Закрыть меню"
+        aria-label="Меню"
         onclick="var t=document.getElementById('sidebar-toggle'); if (t) { t.click(); }">
-    <span class="nav-item__icon" data-icon="System/close-line"></span>
+    <span class="nav-item__icon" data-icon="System/menu-line"></span>
 </button>
 <?php } ?>
