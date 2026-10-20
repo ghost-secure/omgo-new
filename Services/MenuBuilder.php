@@ -51,6 +51,7 @@ class MenuBuilder
 
             $pages = $this->loadCatalogMap($normalized);
             $tree = $this->buildTree($normalized, $pages);
+            $tree = $this->restrictByRole($tree);
             RemixIconCache::warmTree($tree);
             return [
                 'code' => $code,
@@ -300,6 +301,67 @@ class MenuBuilder
         };
 
         return $build('__root__');
+    }
+
+    /**
+     * Состав и порядок — из t_menu. Видимость страниц — из ролей пользователя.
+     * Суперадмин получает дерево целиком. Чужую страницу-родителя убираем,
+     * разрешённых детей поднимаем к ближайшему оставшемуся предку.
+     *
+     * @param array<int, array<string, mixed>> $nodes
+     * @return array<int, array<string, mixed>>
+     */
+    private function restrictByRole(array $nodes): array
+    {
+        $allowed = (new RoleService())->menuPageIds();
+        if ($allowed === null) {
+            return $nodes;
+        }
+
+        $allow = array_fill_keys($allowed, true);
+
+        return $this->filterRoleNodes($nodes, $allow);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $nodes
+     * @param array<int, true> $allow
+     * @return array<int, array<string, mixed>>
+     */
+    private function filterRoleNodes(array $nodes, array $allow): array
+    {
+        $out = [];
+        foreach ($nodes as $node) {
+            $children = is_array($node['children'] ?? null) ? $node['children'] : [];
+            $children = $this->filterRoleNodes($children, $allow);
+            $type = (string) ($node['type'] ?? '');
+
+            if ($type === 'group') {
+                if ($children === []) {
+                    continue;
+                }
+                $node['children'] = $children;
+                $out[] = $node;
+                continue;
+            }
+
+            if ($type !== 'page') {
+                continue;
+            }
+
+            $pageId = (int) ($node['page_id'] ?? 0);
+            if ($pageId <= 0 || !isset($allow[$pageId])) {
+                foreach ($children as $child) {
+                    $out[] = $child;
+                }
+                continue;
+            }
+
+            $node['children'] = $children;
+            $out[] = $node;
+        }
+
+        return $out;
     }
 }
 

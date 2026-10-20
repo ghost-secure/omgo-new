@@ -32,6 +32,11 @@ return [
             'public' => false,
             'description' => 'Кабинет: пул проверочных кодов t_code (флоу codes)',
         ],
+        'admin.analysis-event' => [
+            'handler' => \Api\JsApi\AnalysisEventHandler::class,
+            'public' => false,
+            'description' => 'Кабинет: событие воркфлоу заявки t_analysis (флоу analysis)',
+        ],
         'auth.impersonate' => [
             'handler' => \Api\JsApi\AuthImpersonateHandler::class,
             'public' => false,

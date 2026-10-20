@@ -45,7 +45,7 @@ if (!function_exists('menuPreviewNormalizePath')) {
             $pageId = (int)($item['page_id'] ?? 0);
             $badge = $badges[$pageId] ?? null;
             $badgeNumber = (int)($badge['number'] ?? 0);
-            $badgeColor = htmlspecialchars((string)($badge['color'] ?? '#ef4444'), ENT_QUOTES, 'UTF-8');
+            $badgeColor = htmlspecialchars((string)($badge['color'] ?? 'var(--color-danger)'), ENT_QUOTES, 'UTF-8');
             $iconNameRaw = trim((string)($item['icon'] ?? ''));
             $hasBadge = $badgeNumber > 0;
             $isActive = menuPreviewNormalizePath($urlRaw) === menuPreviewNormalizePath($currentPath);

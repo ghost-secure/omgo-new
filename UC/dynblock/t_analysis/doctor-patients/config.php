@@ -188,6 +188,16 @@ CODE
             'visible' => true,
             'export' => true,
             'filter' => false,
+            'cell_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabelHtml(is_array($record ?? null) ? $record : [], 'view_result');
+CODE
+            ,
+            'export_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabel(is_array($record ?? null) ? $record : [], 'view_result');
+CODE
+            ,
         ],
         'view_hrd' => [
             'column' => 'view_hrd',
@@ -196,6 +206,16 @@ CODE
             'visible' => true,
             'export' => true,
             'filter' => false,
+            'cell_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabelHtml(is_array($record ?? null) ? $record : [], 'view_hrd');
+CODE
+            ,
+            'export_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabel(is_array($record ?? null) ? $record : [], 'view_hrd');
+CODE
+            ,
         ],
         'view_status' => [
             'column' => 'view_status',

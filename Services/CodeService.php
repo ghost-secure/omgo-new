@@ -40,6 +40,68 @@ class CodeService
     }
 
     /**
+     * Свободный код по строке с формы. Легаси `Code::checkCode`: маска и «ещё не активирован».
+     * Свободный — то же правило, что у грида кодов (`isActivated` наоборот).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findIdleCode(string $code): ?array
+    {
+        $code = self::normalizeCode($code);
+        if ($code === '') {
+            return null;
+        }
+
+        $row = $this->db->reset()
+            ->select(['cat', 'varc_code', 'view_analiz', 'date_activate', 'user_activate'])
+            ->from(self::TBL)
+            ->where(['varc_code' => $code])
+            ->limit(1)
+            ->getOne();
+        if (!$row) {
+            return null;
+        }
+
+        $record = (array) $row;
+        if (self::isActivated($record)) {
+            return null;
+        }
+
+        return $record;
+    }
+
+    /**
+     * Пометить код потраченным. Повторная активация не проходит.
+     * `date_activate` в базе — INT unix, как в легаси `time()`.
+     */
+    public function activate(int $codeId, int $userId): void
+    {
+        if ($codeId <= 0 || $userId <= 0) {
+            throw new \RuntimeException('Ошибка сохранения пациента [#0002]');
+        }
+
+        $stmt = $this->db->reset()->execute(
+            'UPDATE ' . self::TBL
+            . ' SET user_activate = ?, date_activate = ?'
+            . ' WHERE cat = ? AND ' . self::idleSql(self::TBL),
+            [$userId, time(), $codeId]
+        );
+        if (!$stmt || $stmt->rowCount() !== 1) {
+            throw new \RuntimeException('Ошибка сохранения пациента [#0002]');
+        }
+    }
+
+    /**
+     * Легаси `Code::MASKREPLACE`: оставить цифры, латиницу и дефис.
+     */
+    public static function normalizeCode(string $code): string
+    {
+        $clean = preg_replace('/[^-A-Z0-9]/ui', '', $code);
+
+        return is_string($clean) ? $clean : '';
+    }
+
+    /**
      * Легаси `Code::makeCode`: 3 латинские буквы имени типа + два куска по 4 символа.
      * «ИГХ PTEN» → префикс PTE, BRCA → BRC.
      */

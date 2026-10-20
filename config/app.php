@@ -38,6 +38,8 @@ return [
         ],
         'manager_roles' => [1, 2, 3, 4],
         'unique_fields' => ['login', 'email', 'phone'],
+        'login_max_attempts' => (int)$env('AUTH_LOGIN_MAX_ATTEMPTS', 5),
+        'login_window_minutes' => (int)$env('AUTH_LOGIN_WINDOW_MINUTES', 15),
     ],
 
     'menu' => [

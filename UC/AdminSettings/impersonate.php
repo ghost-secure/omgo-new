@@ -13,6 +13,11 @@ if (!$canList && !$impersonating) {
 ?>
 <div class="admin-settings-impersonate admin-settings__section">
     <h3>Авторизация</h3>
+    <?php if ($impersonating): ?>
+        <button type="button" class="admin-settings-impersonate__exit" data-admin-impersonate="exit">
+            Отмена входа
+        </button>
+    <?php endif; ?>
     <?php if ($canList && !empty($ctx['impersonate_users'])): ?>
         <div class="admin-settings-impersonate__list">
             <?php foreach ($ctx['impersonate_users'] as $row): ?>
@@ -24,17 +29,13 @@ if (!$canList && !$impersonating) {
                 }
                 ?>
                 <button type="button"
-                        class="admin-settings-impersonate__btn"
+                        class="admin-settings-impersonate__btn d-flex justify-between align-center gap-sm"
                         data-admin-impersonate="start"
                         data-user-id="<?= $e((string) $id) ?>">
-                    <?= $e($label) ?>
+                    <span><?= $e($label) ?></span>
+                    <span class="text-muted whitespace-nowrap">#<?= $e((string) $id) ?></span>
                 </button>
             <?php endforeach; ?>
         </div>
-    <?php endif; ?>
-    <?php if ($impersonating): ?>
-        <button type="button" class="admin-settings-impersonate__exit" data-admin-impersonate="exit">
-            Отмена входа
-        </button>
     <?php endif; ?>
 </div>

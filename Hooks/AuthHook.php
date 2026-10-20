@@ -38,7 +38,7 @@ class AuthHook implements HookInterface
         $loginUrl = (string)$config->get('auth.login_url', '/login');
         $path = $request->getPath();
 
-        if ($this->isPublicPath($path, $loginUrl, $config)) {
+        if ($this->isPublicPath($path, $loginUrl, $config) || $this->isPdfPrintSource($request)) {
             return null;
         }
 
@@ -98,6 +98,20 @@ class AuthHook implements HookInterface
         }
 
         return false;
+    }
+
+    /**
+     * Сервис печати открывает /pdf/{guid}/?create=1&temp= без сессии.
+     * Сам HTML отдаётся только после одноразового токена в ConclusionPrint.
+     */
+    private function isPdfPrintSource(Request $request): bool
+    {
+        $path = rtrim($request->getPath(), '/') ?: '/';
+        if (preg_match('#^/pdf/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$#i', $path) !== 1) {
+            return false;
+        }
+
+        return (string) $request->get('create') === '1';
     }
 
     private function redirectToLogin(Request $request, string $loginUrl): Response

@@ -5,16 +5,20 @@ namespace Services;
 use Core\Auth\AuthManager;
 use Core\Auth\UserAccount;
 use Core\Log\ModeratorLog;
+use Core\Request;
+use Core\Security\Crypto;
 use Helpers\Session;
 
 /**
- * Сессионный вход по tblusers. Магазинную куку AUTH_KEY не используем.
+ * Вход по tblusers: сессия и кука AUTH_KEY до 1 января 2030, как на test.
  * Пароль: bcrypt (новое ядро) или легаси sha1(sha1(salt)+sha1(pass)) / generateDbPassword.
+ * Лимит попыток — ядро, AuthManager::login(). Ниже пустой контракт, если проект захочет другие числа или выключить лимит.
  */
 class AuthService extends AuthManager
 {
     private const SESSION_UID = 'omgo_auth_uid';
     private const SESSION_IMPERSONATOR = 'omgo_auth_impersonator';
+    private const AUTH_COOKIE = 'AUTH_KEY';
 
     public function isAuthenticated(): bool
     {
@@ -23,18 +27,28 @@ class AuthService extends AuthManager
         }
 
         $uid = (int)Session::getValue(self::SESSION_UID);
-        if ($uid <= 0) {
-            return false;
-        }
-
-        $row = $this->loadAccount($uid);
-        if ($row === null) {
+        if ($uid > 0) {
+            $row = $this->loadAccount($uid);
+            if ($row !== null) {
+                $this->user = $row;
+                return true;
+            }
             Session::clearValue(self::SESSION_UID);
-            return false;
+            Session::clearValue(self::SESSION_IMPERSONATOR);
         }
 
-        $this->user = $row;
-        return true;
+        return $this->authenticateByCookie();
+    }
+
+    /**
+     * Пустой контракт лимита входа: свои числа не задаём, действует ядро и env.
+     * Вернуть null — выключить лимит. Вернуть max и window — подменить env.
+     *
+     * @return array{max:int,window:int}|null
+     */
+    protected function loginAttemptLimit(): ?array
+    {
+        return parent::loginAttemptLimit();
     }
 
     public function getUser(): ?array
@@ -63,7 +77,7 @@ class AuthService extends AuthManager
         return $this->passwordMatches($row, $password);
     }
 
-    public function login(string $username, string $password): bool
+    protected function authenticate(string $username, string $password): bool
     {
         $row = $this->findAccountByLogin($username);
         if ($row === null || !$this->passwordMatches($row, $password)) {
@@ -73,6 +87,7 @@ class AuthService extends AuthManager
         Session::setValue(self::SESSION_UID, (int)$row['id']);
         $this->user = $row;
         $this->initialized = true;
+        $this->setAuthCookie($row, $username);
         ModeratorLog::onAuth((int)$row['id']);
         return true;
     }
@@ -81,6 +96,7 @@ class AuthService extends AuthManager
     {
         Session::clearValue(self::SESSION_UID);
         Session::clearValue(self::SESSION_IMPERSONATOR);
+        $this->clearAuthCookie();
         $this->user = null;
         $this->initialized = true;
     }
@@ -118,13 +134,29 @@ class AuthService extends AuthManager
 
     public function loginAsUser(int $targetUserId): bool
     {
-        if (!$this->canStartImpersonation()) {
+        if ($targetUserId <= 0) {
             return false;
         }
 
         $currentId = $this->getUserId();
-        if ($currentId === null || $currentId === $targetUserId || $targetUserId <= 0) {
+        if ($currentId === null) {
             return false;
+        }
+
+        $impersonatorId = $this->getImpersonatorId();
+        if ($impersonatorId === null) {
+            if (!$this->canStartImpersonation()) {
+                return false;
+            }
+            $impersonatorId = $currentId;
+        }
+
+        if ($targetUserId === $currentId) {
+            return true;
+        }
+
+        if ($targetUserId === $impersonatorId) {
+            return $this->exitImpersonation();
         }
 
         $target = $this->loadAccount($targetUserId);
@@ -132,7 +164,7 @@ class AuthService extends AuthManager
             return false;
         }
 
-        Session::setValue(self::SESSION_IMPERSONATOR, $currentId);
+        Session::setValue(self::SESSION_IMPERSONATOR, $impersonatorId);
         Session::setValue(self::SESSION_UID, $targetUserId);
         $this->user = $target;
         $this->initialized = true;
@@ -314,5 +346,101 @@ class AuthService extends AuthManager
         }
 
         return false;
+    }
+
+    /**
+     * Кука как на test: логин, хэш пароля из базы и IP. Срок — 1 января 2030.
+     * Вход под пользователем сюда не пишется, он остаётся в сессии.
+     *
+     * @param array<string, mixed> $user
+     */
+    private function setAuthCookie(array $user, string $username): void
+    {
+        $dbPass = (string)($user['passwd'] ?? '');
+        if ($username === '' || $dbPass === '') {
+            return;
+        }
+
+        $json = json_encode([
+            'ip' => Request::createFromGlobals()->ip(),
+            'username' => $username,
+            'db_pass' => $dbPass,
+        ], JSON_UNESCAPED_UNICODE);
+        if ($json === false) {
+            return;
+        }
+
+        $encrypted = Crypto::encrypt($json, 'auth_cookie');
+        if ($encrypted === null) {
+            return;
+        }
+
+        $this->writeAuthCookie($encrypted, mktime(0, 0, 0, 1, 1, 2030));
+    }
+
+    private function clearAuthCookie(): void
+    {
+        $this->writeAuthCookie('', time() - 3600);
+        unset($_COOKIE[self::AUTH_COOKIE]);
+    }
+
+    private function writeAuthCookie(string $value, int $expires): void
+    {
+        setcookie(self::AUTH_COOKIE, $value, [
+            'expires' => $expires,
+            'path' => '/',
+            'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    private function authenticateByCookie(): bool
+    {
+        $token = (string)($_COOKIE[self::AUTH_COOKIE] ?? '');
+        if ($token === '') {
+            return false;
+        }
+
+        $plain = Crypto::decrypt($token, 'auth_cookie');
+        if ($plain === null) {
+            return false;
+        }
+
+        $data = json_decode($plain, true);
+        if (!is_array($data)) {
+            return false;
+        }
+
+        $username = (string)($data['username'] ?? '');
+        $dbPass = (string)($data['db_pass'] ?? '');
+        $ip = (string)($data['ip'] ?? '');
+        if ($username === '' || $dbPass === '') {
+            return false;
+        }
+
+        $currentIp = Request::createFromGlobals()->ip();
+        $remoteAddr = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+        if ($ip !== $currentIp && $ip !== $remoteAddr) {
+            return false;
+        }
+
+        $row = $this->findAccountByLogin($username);
+        if ($row === null) {
+            $this->clearAuthCookie();
+            return false;
+        }
+
+        $stored = (string)($row['passwd'] ?? '');
+        if ($stored === '' || strlen($stored) !== strlen($dbPass) || !hash_equals($stored, $dbPass)) {
+            $this->clearAuthCookie();
+            return false;
+        }
+
+        Session::setValue(self::SESSION_UID, (int)$row['id']);
+        $this->user = $row;
+        $this->initialized = true;
+
+        return true;
     }
 }

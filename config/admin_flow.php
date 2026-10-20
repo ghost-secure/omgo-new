@@ -7,5 +7,6 @@ return [
     'allowed' => [
         'route',
         'codes',
+        'analysis',
     ],
 ];

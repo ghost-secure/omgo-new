@@ -27,9 +27,11 @@ $omgoLogoWithClose = false;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($metaTitle, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="stylesheet" href="<?= AssetHelper::versionedUrl('/core-assets/config-default.css') ?>">
+    <link rel="stylesheet" href="<?= AssetHelper::versionedUrl('/core-assets/config.css') ?>">
     <style>
         html, body { margin: 0; padding: 0; min-height: 100%; }
-        body.page-auth { background: #111; color: #1a1a1a; }
+        body.page-auth { background: var(--color-black); color: var(--color-charcoal); }
         .page-login {
             min-height: 100vh;
             display: flex;
@@ -54,7 +56,7 @@ $omgoLogoWithClose = false;
             max-width: 100%;
             max-height: 100vh;
             overflow: auto;
-            background: #fff;
+            background: var(--color-white);
             padding: 32px 36px 40px;
         }
         .auth-head { margin-bottom: 20px; }
@@ -71,33 +73,33 @@ $omgoLogoWithClose = false;
             align-items: center;
             padding: 8px 12px;
             border-radius: 8px;
-            border: 1px solid #e4e4e4;
-            color: #2574bb;
+            border: 1px solid var(--color-silver);
+            color: var(--color-blue);
             text-decoration: none;
             font: 600 14px/1.2 Arial, sans-serif;
-            background: #fff;
+            background: var(--color-white);
         }
         .auth-tab.is-active {
-            background: #ff7f22;
-            border-color: #ff7f22;
-            color: #fff;
+            background: var(--color-promo);
+            border-color: var(--color-promo);
+            color: var(--color-white);
         }
         .auth-form { display: flex; flex-direction: column; gap: 12px; }
-        .auth-note { margin: 0; font: 14px/1.4 Arial, sans-serif; color: #444; }
+        .auth-note { margin: 0; font: 14px/1.4 Arial, sans-serif; color: var(--color-ash); }
         .form-field { display: flex; flex-direction: column; gap: 4px; }
-        .form-field label { font: 13px/1.3 Arial, sans-serif; color: #333; }
+        .form-field label { font: 13px/1.3 Arial, sans-serif; color: var(--color-graphite); }
         .auth-form input,
         .auth-form textarea {
             box-sizing: border-box;
             width: 100%;
-            border: 1px solid #d5d5d5;
+            border: 1px solid var(--color-lgrey);
             border-radius: 8px;
             padding: 10px 12px;
             font: 15px/1.4 Arial, sans-serif;
         }
         .auth-form input.error,
-        .auth-form textarea.error { border-color: #c33; }
-        .auth-form .error-msg { color: #c33; font: 12px/1.3 Arial, sans-serif; }
+        .auth-form textarea.error { border-color: var(--color-danger); }
+        .auth-form .error-msg { color: var(--color-danger); font: 12px/1.3 Arial, sans-serif; }
         .auth-honeypot {
             position: absolute !important;
             left: -10000px !important;
@@ -108,8 +110,8 @@ $omgoLogoWithClose = false;
         .auth-submit {
             border: 0;
             border-radius: 8px;
-            background: #ff7f22;
-            color: #fff;
+            background: var(--color-promo);
+            color: var(--color-white);
             font: 600 15px/1 Arial, sans-serif;
             padding: 12px 16px;
             cursor: pointer;

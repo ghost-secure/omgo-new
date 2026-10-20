@@ -22,6 +22,7 @@ final class Flow
      *   variant?: string,
      * } $opts
      * `variant=toolbar` — кнопка тулбара admin-table: иконка + подпись, класс как у «Выгрузить в Excel».
+     * `variant=menu` — пункт выпадающего меню: ширина по тексту, без тултипа.
      * Бейдж не выводится, если значение пустое или число &lt; 1 (для нечисловых строк — как раньше).
      */
     public static function button(array $opts): string
@@ -50,12 +51,23 @@ final class Flow
         $badgeBgStyle = 'background: var(--color-' . $badgeColorToken . ');';
 
         $tableAttr = $table !== '' ? ' data-flow-table="' . $table . '"' : '';
-        $isToolbar = (string) ($opts['variant'] ?? '') === 'toolbar';
+        $variant = (string) ($opts['variant'] ?? '');
+        $isToolbar = $variant === 'toolbar';
+        $isMenu = $variant === 'menu';
         $btnClass = $isToolbar
             ? 'btn btn-outline-secondary admin-flow-btn'
-            : ($label !== ''
-                ? 'btn btn-sm btn-outline-primary admin-flow-btn'
-                : 'btn-icon btn-icon-outline-primary admin-flow-btn');
+            : ($isMenu
+                ? 'btn btn-sm btn-outline-secondary admin-flow-btn'
+                : ($label !== ''
+                    ? 'btn btn-sm btn-outline-primary admin-flow-btn'
+                    : 'btn-icon btn-icon-outline-primary admin-flow-btn'));
+        $btnStyle = 'position:relative;overflow:visible;';
+        if ($isMenu) {
+            $btnStyle .= 'text-align:left;white-space:nowrap;';
+        }
+        $tooltipAttr = $isMenu
+            ? ''
+            : ' data-plugin="tooltip" data-tooltip="' . $title . '" data-tooltip-position="top"';
 
         $html = '<span class="admin-flow-trigger" style="display:inline-block;vertical-align:middle;">'
             . '<button type="button" class="' . $btnClass . '" data-admin-flow'
@@ -65,8 +77,8 @@ final class Flow
             . ' data-flow-title="' . $title . '"'
             . $tableAttr
             . $hashAttr
-            . ' data-plugin="tooltip" data-tooltip="' . $title . '" data-tooltip-position="top"'
-            . ' style="position:relative;overflow:visible;">';
+            . $tooltipAttr
+            . ' style="' . $btnStyle . '">';
 
         if ($isToolbar) {
             $html .= '<span class="nav-item__icon" data-icon="' . $ico . '"></span>';

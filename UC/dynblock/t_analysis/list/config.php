@@ -10,15 +10,16 @@ $config = [
         'cat' => [
             'column' => 'cat',
             'label' => '#ID',
-            'order' => 0,
+            'order' => 3,
             'visible' => true,
             'export' => true,
             'filter' => true,
+            'inline_filter' => true,
         ],
         'created_add' => [
             'column' => 'created_add',
             'label' => 'Дата создания',
-            'order' => 1,
+            'order' => 4,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -26,7 +27,7 @@ $config = [
         'date_correctmaterial' => [
             'column' => 'date_correctmaterial',
             'label' => 'Дата принятия материала',
-            'order' => 2,
+            'order' => 5,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -44,7 +45,7 @@ CODE
         'date_execauto' => [
             'column' => 'date_execauto',
             'label' => 'Дата выполнения',
-            'order' => 3,
+            'order' => 6,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -62,7 +63,7 @@ CODE
         'pacient_code' => [
             'column' => 'pacient_code',
             'label' => 'Условный код',
-            'order' => 4,
+            'order' => 7,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -82,7 +83,7 @@ CODE
         'analysis_double' => [
             'column' => 'analysis_double',
             'label' => 'Дубль',
-            'order' => 5,
+            'order' => 8,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -98,7 +99,7 @@ CODE
         'pacient_name' => [
             'column' => 'pacient_name',
             'label' => 'ФИО пациента',
-            'order' => 6,
+            'order' => 0,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -124,7 +125,7 @@ CODE
         'pacient_bd' => [
             'column' => 'pacient_bd',
             'label' => 'Дата рождения',
-            'order' => 7,
+            'order' => 9,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -133,7 +134,7 @@ CODE
         'pacient_male' => [
             'column' => 'pacient_male',
             'label' => 'Пол',
-            'order' => 8,
+            'order' => 10,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -142,7 +143,7 @@ CODE
         'view_diagnoz' => [
             'column' => 'view_diagnoz',
             'label' => 'Диагноз',
-            'order' => 9,
+            'order' => 11,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -150,7 +151,7 @@ CODE
         'doctor_region' => [
             'column' => 'doctor_region',
             'label' => 'Регион врача',
-            'order' => 10,
+            'order' => 12,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -159,7 +160,7 @@ CODE
         'doctor_name' => [
             'column' => 'doctor_name',
             'label' => 'Врач',
-            'order' => 11,
+            'order' => 13,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -168,7 +169,7 @@ CODE
         'pacient_region' => [
             'column' => 'pacient_region',
             'label' => 'Регион пациента',
-            'order' => 12,
+            'order' => 14,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -177,7 +178,7 @@ CODE
         'view_lab' => [
             'column' => 'view_lab',
             'label' => 'Лаборатория',
-            'order' => 13,
+            'order' => 15,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -185,7 +186,7 @@ CODE
         'view_test' => [
             'column' => 'view_test',
             'label' => 'Анализ',
-            'order' => 14,
+            'order' => 1,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -209,23 +210,43 @@ CODE
         'view_result' => [
             'column' => 'view_result',
             'label' => 'Статус мутации',
-            'order' => 15,
-            'visible' => true,
-            'export' => true,
-            'filter' => true,
-        ],
-        'view_hrd' => [
-            'column' => 'view_hrd',
-            'label' => 'Статус HRD',
             'order' => 16,
             'visible' => true,
             'export' => true,
             'filter' => true,
+            'cell_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabelHtml(is_array($record ?? null) ? $record : [], 'view_result');
+CODE
+            ,
+            'export_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabel(is_array($record ?? null) ? $record : [], 'view_result');
+CODE
+            ,
+        ],
+        'view_hrd' => [
+            'column' => 'view_hrd',
+            'label' => 'Статус HRD',
+            'order' => 17,
+            'visible' => true,
+            'export' => true,
+            'filter' => true,
+            'cell_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabelHtml(is_array($record ?? null) ? $record : [], 'view_hrd');
+CODE
+            ,
+            'export_formatter' => <<<'CODE'
+<?php
+echo \Services\AnalysisService::viewLabel(is_array($record ?? null) ? $record : [], 'view_hrd');
+CODE
+            ,
         ],
         'view_status' => [
             'column' => 'view_status',
             'label' => 'Статус',
-            'order' => 17,
+            'order' => 2,
             'visible' => true,
             'export' => true,
             'filter' => true,
@@ -239,6 +260,19 @@ $late = (int) ($record['cnt_late'] ?? 0);
 if ($late > 0) {
     echo '<div>' . $late . ' дн.</div>';
 }
+CODE
+            ,
+        ],
+        '_actions' => [
+            'column' => '_actions',
+            'label' => 'Действия',
+            'order' => 18,
+            'visible' => true,
+            'export' => false,
+            'filter' => false,
+            'cell_formatter' => <<<'CODE'
+<?php
+echo \UC\AnalysisActions::render(is_array($record ?? null) ? $record : [], 'dropdown');
 CODE
             ,
         ],
@@ -299,8 +333,22 @@ $config['filter_fields'] = [
     ],
 ];
 
+$config['filter_primary'] = ['pacient_surname', 'doctor_surname'];
+
 $config['row_styling'] = \Core\Container::getInstance()
     ->get(\Services\AnalysisService::class)
     ->statusRowStyling();
+
+$config['toolbar_left'] = static function (): string {
+    $analysis = \Core\Container::getInstance()->get(\Services\AnalysisService::class);
+    $auth = function_exists('auth') ? auth() : null;
+    $user = $auth ? $auth->getUser() : null;
+    $scope = $analysis->pacientListScope(is_array($user) ? $user : null);
+    if (empty($scope['add_button']) || (new \Core\Request())->isMobile()) {
+        return '';
+    }
+
+    return \Services\AnalysisService::addPacientButtonHtml();
+};
 
 return $config;

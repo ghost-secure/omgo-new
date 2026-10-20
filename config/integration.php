@@ -43,4 +43,19 @@ return [
     'dadata' => [
         'token' => (string) $env('DADATA_TOKEN', ''),
     ],
+
+    // Внешняя печать HTML → PDF. Класс Services\Pdf\RemoteHtmlToPdf, не сборка заключения.
+    'printpdf' => [
+        'url' => (string) $env('PRINTPDF_URL', ''),
+        'token' => (string) $env('PRINTPDF_TOKEN', ''),
+        'timeout' => $envInt('PRINTPDF_TIMEOUT', 40),
+        'format' => (string) $env('PRINTPDF_FORMAT', 'A4'),
+        'orientation' => (string) $env('PRINTPDF_ORIENTATION', 'P'),
+        'alert_url' => (string) $env('PRINTPDF_ALERT_URL', ''),
+        'alert_token' => (string) $env('PRINTPDF_ALERT_TOKEN', ''),
+        'alert_project' => (string) $env('PRINTPDF_ALERT_PROJECT', ''),
+        'alert_message' => (string) $env('PRINTPDF_ALERT_MESSAGE', '🚨 #ОМГО #Error: Проблема с генерацией отчета в PDF'),
+        // 0 — ссылка /pdf/{guid}/ отдаёт HTML, сервис не вызывается. На проде 1.
+        'remote' => $envBool('PRINTPDF_REMOTE', true),
+    ],
 ];

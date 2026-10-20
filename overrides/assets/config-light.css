@@ -6,86 +6,127 @@
  * Легаси-эталон палитры: omgo-lu/project/web/css/lu-original.css (--main-color, --sidebar-bg).
  */
 
-html.theme-light {
-    --color-primary: #ff7f22;
-    --color-primary-light: #ff9a4d;
-    --color-primary-dark: #e56a12;
-    --color-primary-rgb: 255, 127, 34;
+html.theme-light,
+html.theme-dark {
+    --sidebar-width: 296px;
+    /* Корень админки. Ядро ставит html { font-size: 16px } позже, поэтому селектор с темой. */
+    font-size: 18px;
+}
 
-    --color-blue: #2574bb;
-    --color-blue-rgb: 37, 116, 187;
-    /* Мнемоники списка пациентов — как в легаси.
-       uikit.css (его подключает lu-original.css): --color-* и --color-bg-*.
-       lu-original.css :root: --pink. Класс .bg-pink читает именно --pink.
-       В разметке hex нет: строка var(--color-bg-blue), бейдж класс bg-deepgreen. */
-    --color-green: #00bc8b;
-    --color-green-rgb: 0, 188, 139;
-    --color-red: #ef3737;
-    --color-red-rgb: 239, 55, 55;
-    --color-yellow: #ef7f1a;
-    --color-yellow-rgb: 239, 127, 26;
-    --color-orange: #ef7f1a;
-    --color-deepgreen: #013220;
-    --color-purple: #aa71cb;
-    --pink: #e83e8c;
-    --color-bg-green: #e6f2ed;
-    --color-bg-blue: #d7e8f7;
-    --color-bg-yellow: #fffaf0;
-    --color-bg-red: #ffefed;
-    --color-bg-lgrey: #f4fafb;
+/* Узкий экран: то же зерно мельче. Кегль и rem-отступы считаются от него. */
+@media (max-width: 768px) {
+    html.theme-light,
+    html.theme-dark {
+        font-size: 15px;
+    }
+}
 
-    --tooltip-bg: rgba(0, 0, 0, 0.88);
-    --tooltip-color: #ffffff;
-    --tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+/* Тень без сдвига вниз: одинаково сверху, снизу и по бокам.
+   :root в селекторе сильнее позднего html.theme-* из core/assets/config.css. */
+html.theme-light:root {
+    --shadow-sm: 0 0 4px 0 rgba(0, 0, 0, 0.08);
+    --shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 0 14px 0 rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 0 22px 0 rgba(0, 0, 0, 0.14);
+    --shadow-xl: 0 0 32px 0 rgba(0, 0, 0, 0.16);
+    --default-card-shadow: 0 0 14px 0 rgba(147, 156, 176, 0.28);
+    --default-card-shadow-hovered: 0 0 10px 0 rgba(147, 156, 176, 0.2);
+    --desktop-shadow: 0 0 24px 0 color-mix(in srgb, var(--color-haze) 10%, transparent);
+    --shadow-block: 0 0 2px 0 rgba(147, 151, 173, 0.12), 0 0 28px 0 rgba(147, 151, 173, 0.22);
+    --tooltip-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
 
-    --sidebar-menu-active-color: #ff7f22;
+html.theme-dark:root {
+    --shadow-sm: 0 0 4px 0 rgba(0, 0, 0, 0.35);
+    --shadow: 0 0 8px 0 rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 0 14px 0 rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 0 22px 0 rgba(0, 0, 0, 0.55);
+    --shadow-xl: 0 0 32px 0 rgba(0, 0, 0, 0.6);
+    --default-card-shadow: 0 0 14px 0 rgba(0, 0, 0, 0.4);
+    --default-card-shadow-hovered: 0 0 10px 0 rgba(0, 0, 0, 0.45);
+    --desktop-shadow: 0 0 24px 0 rgba(0, 0, 0, 0.45);
+    --shadow-block: 0 0 2px 0 rgba(0, 0, 0, 0.35), 0 0 28px 0 rgba(0, 0, 0, 0.55);
+    --tooltip-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+}
+
+html.theme-light .admin-layout,
+html.theme-dark .admin-layout {
+    grid-template-columns: var(--sidebar-width) 1fr;
+}
+
+html.theme-light .admin-app-wrapper.sidebar-collapsed .admin-layout,
+html.theme-dark .admin-app-wrapper.sidebar-collapsed .admin-layout {
+    grid-template-columns: var(--sidebar-width-collapsed) 1fr;
+}
+
+/* На ширине до 768px ядро ставит одну колонку, сайдбар уезжает за экран.
+   Правило 296px выше по специфичности и оставляло пустую колонку справа от main. */
+@media (max-width: 768px) {
+    html.theme-light .admin-layout,
+    html.theme-dark .admin-layout,
+    html.theme-light .admin-app-wrapper.sidebar-collapsed .admin-layout,
+    html.theme-dark .admin-app-wrapper.sidebar-collapsed .admin-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Пигменты и мнемоники светлой темы — core/assets/config.css, блок html.theme-light.
+   Здесь hex нет: цвет либо пигмент, либо мнемоника, которая смотрит на пигмент. */
+
+/* Ссылки этого проекта. Ядро красит a в --color-primary и здесь не трогается. */
+html.theme-light a:where(:not(.btn)):where(:not(.text-white)) {
+    color: var(--color-blue);
+}
+
+html.theme-light a:where(:not(.btn)):where(:not(.text-white)):hover {
+    color: var(--color-blue);
 }
 
 /* Лого: десктоп 166×56, мобильный 130×40 + крестик (легаси logo.php) */
 html.theme-light .admin-layout > .brand {
-    background-color: #000;
-    border-bottom-color: #222;
-    border-right-color: #222;
-    color: #fff;
+    background-color: var(--color-black);
+    border-bottom-color: var(--color-charcoal);
+    border-right-color: var(--color-charcoal);
+    color: var(--color-white);
     gap: var(--space-sm);
 }
 
-html.theme-light .brand-logo {
+.brand-logo {
     display: flex;
     align-items: center;
     line-height: 0;
 }
 
-html.theme-light .brand-logo__mobile,
-html.theme-light .brand-sidebar-close {
+.brand-logo__mobile,
+.brand-sidebar-close {
     display: none;
 }
 
-html.theme-light .brand-sidebar-close {
+.brand-sidebar-close {
     align-items: center;
     justify-content: center;
     margin-left: auto;
     padding: 0;
     border: 0;
     background: transparent;
-    color: #8c94a5;
+    color: var(--color-steel);
     cursor: pointer;
 }
 
-html.theme-light .brand-sidebar-close:hover {
-    color: #fff;
+.brand-sidebar-close:hover {
+    color: var(--color-white);
 }
 
 @media (max-width: 768px) {
-    html.theme-light .brand-logo__desktop {
+    .brand-logo__desktop {
         display: none;
     }
 
-    html.theme-light .brand-logo__mobile {
+    .brand-logo__mobile {
         display: block;
     }
 
-    html.theme-light .brand-sidebar-close {
+    .brand-sidebar-close {
         display: inline-flex;
     }
 }
@@ -98,23 +139,23 @@ html.theme-light .brand-sidebar-close:hover {
 /* Сайдбар — чёрный, как легаси --sidebar-bg */
 html.theme-light .sidebar,
 html.theme-light .admin-sidebar {
-    background-color: #000;
-    border-right-color: #222;
+    background-color: var(--color-black);
+    border-right-color: var(--color-charcoal);
 }
 
 html.theme-light .sidebar .menu-label {
-    color: #8c94a5;
+    color: var(--color-steel);
 }
 
 html.theme-light .sidebar .nav-link,
 html.theme-light .sidebar .sidebar-tools .nav-link {
-    color: #dddfe4;
+    color: var(--color-silver);
 }
 
 html.theme-light .sidebar .nav-link:hover,
 html.theme-light .sidebar .sidebar-tools .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    background-color: color-mix(in srgb, var(--color-white) 6%, transparent);
+    color: var(--color-white);
 }
 
 html.theme-light .sidebar .nav-link.active {
@@ -128,7 +169,7 @@ html.theme-light .sidebar .nav-link .nav-item__icon {
 }
 
 html.theme-light .sidebar .chevron {
-    stroke: #8c94a5;
+    stroke: var(--color-steel);
 }
 
 html.theme-light .sidebar .chevron svg {
@@ -138,12 +179,13 @@ html.theme-light .sidebar .chevron svg {
 }
 
 html.theme-light .sidebar .sub-menu {
-    border-left-color: #333;
+    border-left-color: var(--color-graphite);
 }
 
 /* Ядро: .nav-link.expanded + .sub-menu { max-height: 500px; overflow: visible }.
    Лишнее вылезает поверх следующего пункта. Здесь высота по содержимому. */
-html.theme-light .sidebar .nav-link.expanded + .sub-menu {
+html.theme-light .sidebar .nav-link.expanded + .sub-menu,
+html.theme-dark .sidebar .nav-link.expanded + .sub-menu {
     max-height: none;
     padding-top: 2px;
     padding-bottom: 4px;
@@ -156,15 +198,15 @@ html.theme-light .sidebar .sub-menu > .nav-link {
 }
 
 html.theme-light .sidebar .sub-link {
-    color: #8c94a5;
+    color: var(--color-steel);
     padding-top: calc(var(--space-sm) / 2);
     padding-bottom: calc(var(--space-sm) / 2);
     margin-bottom: calc(var(--space-xs) * 0.125);
 }
 
 html.theme-light .sidebar .sub-link:hover {
-    background-color: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    background-color: color-mix(in srgb, var(--color-white) 6%, transparent);
+    color: var(--color-white);
 }
 
 html.theme-light .sidebar .sub-link.active {
@@ -173,84 +215,706 @@ html.theme-light .sidebar .sub-link.active {
 }
 
 html.theme-light .sidebar .sub-link.active::before {
-    box-shadow: 0 0 0 4px #000;
+    box-shadow: 0 0 0 4px var(--color-black);
 }
 
 html.theme-light .admin-sidebar__footer,
 html.theme-light .sidebar-tools {
-    border-top-color: #222 !important;
+    border-top-color: var(--color-charcoal) !important;
 }
 
-/* Бегунок меню: чуть светлее чёрного фона. Ядро красит thumb в --color-lgrey (#d5d5d5). */
+/* Бегунок меню: чуть светлее чёрного фона. Ядро красит thumb в --color-lgrey. */
 html.theme-light .sidebar .sidebar-content {
     scrollbar-width: thin;
-    scrollbar-color: #333333 transparent;
+    scrollbar-color: var(--color-graphite) transparent;
 }
 
 html.theme-light .sidebar .sidebar-content::-webkit-scrollbar-thumb {
-    background: #333333;
+    background: var(--color-graphite);
 }
 
 html.theme-light .sidebar .sidebar-content::-webkit-scrollbar-thumb:hover {
-    background: #4a4a4a;
+    background: var(--color-ash);
 }
 
-/* Горячая линия в шапке. Легаси content.htm: колонка, телефон синий, на узком экране блок скрыт (.d-mb-none). */
-html.theme-light .header-hotline {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    min-width: 0;
-    line-height: 1.2;
+/* Панель подразделов у свёрнутого сайдбара рисует плагин ядра. Здесь тот же чёрный вид, что у колонки меню. */
+html.theme-light .sidebar-flyout {
+    background-color: var(--color-black);
+    border-color: var(--color-charcoal);
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-graphite) transparent;
 }
 
-html.theme-light .header-hotline__phone {
-    color: var(--color-blue);
-    font-weight: 600;
-    font-size: 14px;
-    text-decoration: none;
+html.theme-light .sidebar-flyout::-webkit-scrollbar-thumb {
+    background: var(--color-graphite);
 }
 
-html.theme-light .header-hotline__hours {
-    color: #5c6570;
-    font-size: 12px;
+html.theme-light .sidebar-flyout .nav-link {
+    color: var(--color-silver);
 }
 
+html.theme-light .sidebar-flyout .nav-link:hover {
+    background-color: color-mix(in srgb, var(--color-white) 6%, transparent);
+    color: var(--color-white);
+}
+
+html.theme-light .sidebar-flyout .nav-link.active {
+    background-color: transparent;
+    color: var(--color-primary);
+}
+
+html.theme-light .sidebar-flyout .sub-menu,
+html.theme-light .sidebar-flyout .nav-submenu {
+    border-left-color: var(--color-graphite);
+}
+
+html.theme-light .sidebar-flyout .sub-menu > .nav-link {
+    padding-top: calc((var(--space-sm) + 0.125rem) / 2);
+    padding-bottom: calc((var(--space-sm) + 0.125rem) / 2);
+    margin-bottom: calc(var(--space-xs) * 0.25);
+}
+
+html.theme-light .sidebar-flyout .sub-link {
+    color: var(--color-steel);
+    padding-top: calc(var(--space-sm) / 2);
+    padding-bottom: calc(var(--space-sm) / 2);
+    margin-bottom: calc(var(--space-xs) * 0.125);
+}
+
+html.theme-light .sidebar-flyout .sub-link:hover {
+    background-color: color-mix(in srgb, var(--color-white) 6%, transparent);
+    color: var(--color-white);
+}
+
+html.theme-light .sidebar-flyout .sub-link.active {
+    color: var(--color-primary);
+    background-color: transparent;
+}
+
+html.theme-light .sidebar-flyout .sub-link.active::before {
+    box-shadow: 0 0 0 4px var(--color-black);
+}
+
+/* Горячая линия в шапке. На десктопе тот же вид, что в тёмной теме: обычная ссылка и обычный текст, без своей колонки и кегля. */
 @media (max-width: 768px) {
-    html.theme-light .header-hotline {
-        display: none;
+    html.theme-light .header,
+    html.theme-dark .header {
+        gap: var(--space-sm);
+        padding-left: var(--space-sm);
+        padding-right: var(--space-sm);
+        min-width: 0;
+    }
+
+    html.theme-light .header > div:first-child,
+    html.theme-dark .header > div:first-child,
+    html.theme-light .header-hotline,
+    html.theme-dark .header-hotline {
+        min-width: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+    }
+
+    html.theme-light .header-hotline,
+    html.theme-dark .header-hotline {
+        display: flex;
+        flex-direction: column;
+    }
+
+    html.theme-light .header-hotline__phone,
+    html.theme-light .header-hotline__hours,
+    html.theme-dark .header-hotline__phone,
+    html.theme-dark .header-hotline__hours {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+
+    html.theme-light .header-right,
+    html.theme-dark .header-right {
+        flex: 0 0 auto;
+        gap: var(--space-xs);
     }
 }
 
-/* Строка списка анализов: фон ячейки из --row-tone (var(--color-bg-*)).
+/* Кнопки тулбара грида: синий текст, синяя рамка. «Добавить» остаётся primary. */
+.dynblock-toolbar .btn.btn-outline-secondary {
+    color: var(--color-blue);
+    border-color: var(--color-blue);
+    background: transparent;
+    box-shadow: none;
+}
+
+.dynblock-toolbar .btn.btn-outline-secondary:hover:not(:disabled) {
+    color: var(--color-white);
+    background-color: var(--color-blue);
+    border-color: var(--color-blue);
+}
+
+.dynblock-toolbar .btn.btn-outline-secondary .nav-item__icon,
+.dynblock-toolbar .btn.btn-outline-secondary [data-icon] {
+    color: currentColor;
+}
+
+/* Светлая тема ядра снимает рамку у карточек грида. Пилюля раскрывателя сидит на этой рамке. */
+html.theme-light .admin-main .dynblock-filters,
+html.theme-light .admin-main .dynblock-toolbar,
+html.theme-light .admin-main .dynblock-sql-debug,
+html.theme-light .admin-main .dynblock-agg-report,
+html.theme-light .admin-main .dynblock-status-legend {
+    border: 1px solid var(--color-lgrey);
+}
+
+/* Правые кнопки тулбара компактные, ширина по тексту. Подпись прячет ядро на ширине до 768px. */
+html.theme-light .dynblock-toolbar__right > .dynblock-toolbar__icon-btn,
+html.theme-dark .dynblock-toolbar__right > .dynblock-toolbar__icon-btn {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    flex: 0 0 auto;
+    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-xs);
+    line-height: 1.2;
+    position: relative;
+}
+
+/* Панель фильтров как правый сайдбар: из потока, поля колонкой, скролл внутри. */
+html.theme-light .dynblock-filters,
+html.theme-dark .dynblock-filters {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: var(--z-modal);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 28rem;
+    gap: var(--space-md);
+    max-width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100%;
+    margin: 0;
+    padding: var(--space-md) var(--space-lg);
+    overflow: hidden;
+    border-radius: 0;
+    transform: translateX(0);
+    transition: transform var(--transition-duration-slow) var(--transition-timing);
+}
+
+html.theme-light .dynblock-filters.is-collapsed,
+html.theme-dark .dynblock-filters.is-collapsed {
+    transform: translateX(100%);
+    pointer-events: none;
+}
+
+html.theme-light .dynblock-filters.is-collapsed .filters-form,
+html.theme-dark .dynblock-filters.is-collapsed .filters-form {
+    display: block;
+}
+
+html.theme-light .dynblock-filters__header,
+html.theme-dark .dynblock-filters__header {
+    display: flex;
+    flex: 0 0 auto;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+html.theme-light .dynblock-filters__header-left,
+html.theme-dark .dynblock-filters__header-left {
+    flex: 1 1 auto;
+    justify-content: space-between;
+}
+
+html.theme-light .dynblock-filters__title,
+html.theme-dark .dynblock-filters__title {
+    order: -1;
+}
+
+html.theme-light .dynblock-filters .filters-form,
+html.theme-dark .dynblock-filters .filters-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-top: 0;
+}
+
+html.theme-light .dynblock-filters.is-open .filters-form,
+html.theme-dark .dynblock-filters.is-open .filters-form {
+    flex: 1 1 auto;
+}
+
+html.theme-light .dynblock-filters__footer,
+html.theme-dark .dynblock-filters__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
+    flex: 0 0 auto;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+html.theme-light .dynblock-filters .filters-row,
+html.theme-dark .dynblock-filters .filters-row {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    row-gap: var(--space-md);
+}
+
+html.theme-light .dynblock-filters .filter-item,
+html.theme-dark .dynblock-filters .filter-item,
+html.theme-light .dynblock-filters .filter-item:has(.filter-input:not(.filter-range-input)),
+html.theme-dark .dynblock-filters .filter-item:has(.filter-input:not(.filter-range-input)),
+html.theme-light .dynblock-filters .filter-item:has([data-plugin="custom-select"]),
+html.theme-dark .dynblock-filters .filter-item:has([data-plugin="custom-select"]) {
+    width: 100%;
+    max-width: 100%;
+}
+
+html.theme-light .dynblock-filters .filter-item [data-plugin="custom-select"],
+html.theme-dark .dynblock-filters .filter-item [data-plugin="custom-select"],
+html.theme-light .dynblock-filters .filter-input:not(.filter-range-input),
+html.theme-dark .dynblock-filters .filter-input:not(.filter-range-input) {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+}
+
+html.theme-light .dynblock-filters .filter-item,
+html.theme-dark .dynblock-filters .filter-item {
+    gap: var(--space-sm);
+}
+
+html.theme-light .dynblock-filters .filter-range-wrapper,
+html.theme-dark .dynblock-filters .filter-range-wrapper {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: 100%;
+}
+
+html.theme-light .dynblock-filters .filter-range-input,
+html.theme-dark .dynblock-filters .filter-range-input,
+html.theme-light .dynblock-filters .filter-range-input[type="date"],
+html.theme-dark .dynblock-filters .filter-range-input[type="date"],
+html.theme-light .dynblock-filters .filter-range-input[type="text"],
+html.theme-dark .dynblock-filters .filter-range-input[type="text"] {
+    flex: 1 1 0;
+    width: auto !important;
+    min-width: 0;
+    max-width: none !important;
+    box-sizing: border-box;
+}
+
+html.theme-light .dynblock-filters.block-expander.is-open [data-block-expander-more],
+html.theme-dark .dynblock-filters.block-expander.is-open [data-block-expander-more] {
+    margin-top: 0;
+}
+
+html.theme-light .dynblock-filters .block-expander__toggle,
+html.theme-dark .dynblock-filters .block-expander__toggle {
+    position: static;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    flex: 0 0 auto;
+    align-self: center;
+    margin: 0;
+}
+
+html.theme-light .dynblock-filters-toolbar-toggle.is-extended-active::after,
+html.theme-dark .dynblock-filters-toolbar-toggle.is-extended-active::after {
+    content: "";
+    position: absolute;
+    top: 0.15rem;
+    right: 0.15rem;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+}
+
+/* Панель «Настройки» в ядре 28rem. На узком экране она шире окна и уходит за левый край. */
+@media (max-width: 28rem) {
+    html .admin-right-sidebar[data-content-type="admin-settings"] {
+        width: 100vw;
+        max-width: 100vw;
+        right: -100vw;
+    }
+
+    html .admin-right-sidebar[data-content-type="admin-settings"].sidebar-open {
+        right: 0;
+    }
+}
+
+/* Тёмная тема: те же мнемоники, но фон — примесь к тёмной поверхности.
+   Светлые пастели на тёмной таблице не читаются: текст ячейки светлый. */
+html.theme-dark {
+    --color-bg-green: color-mix(in srgb, var(--color-bg-secondary) 75%, var(--color-green) 25%);
+    --color-bg-blue: color-mix(in srgb, var(--color-bg-secondary) 75%, var(--color-blue) 25%);
+    --color-bg-yellow: color-mix(in srgb, var(--color-bg-secondary) 75%, var(--color-yellow) 25%);
+    --color-bg-red: color-mix(in srgb, var(--color-bg-secondary) 75%, var(--color-red) 25%);
+    --color-bg-lgrey: color-mix(in srgb, var(--color-bg-secondary) 75%, var(--color-lgrey) 25%);
+}
+
+/* Строка списка анализов: фон ячейки из --row-tone, левый край из --row-accent.
    Sticky-колонки ядра красят фон !important, поэтому здесь тоже. */
 html.theme-light table.admin-table tbody tr.row-tone > td,
-html.theme-light .table-container table tbody tr.row-tone > td {
+html.theme-light .table-container table tbody tr.row-tone > td,
+html.theme-dark table.admin-table tbody tr.row-tone > td,
+html.theme-dark .table-container table tbody tr.row-tone > td {
     background-color: var(--row-tone);
+}
+
+html.theme-light table.admin-table tbody tr.row-tone > td:first-child,
+html.theme-light .table-container table tbody tr.row-tone > td:first-child,
+html.theme-dark table.admin-table tbody tr.row-tone > td:first-child,
+html.theme-dark .table-container table tbody tr.row-tone > td:first-child {
+    box-shadow: inset 4px 0 0 var(--row-accent);
 }
 
 html.theme-light table.admin-table tbody tr.row-tone > td.sticky-column-start,
 html.theme-light table.admin-table tbody tr.row-tone > td.sticky-column-end,
 html.theme-light .table-container table tbody tr.row-tone > td.sticky-column-start,
-html.theme-light .table-container table tbody tr.row-tone > td.sticky-column-end {
+html.theme-light .table-container table tbody tr.row-tone > td.sticky-column-end,
+html.theme-dark table.admin-table tbody tr.row-tone > td.sticky-column-start,
+html.theme-dark table.admin-table tbody tr.row-tone > td.sticky-column-end,
+html.theme-dark .table-container table tbody tr.row-tone > td.sticky-column-start,
+html.theme-dark .table-container table tbody tr.row-tone > td.sticky-column-end {
     background-color: var(--row-tone) !important;
 }
 
 /* Сплошной цвет мнемоники. В ядре уже есть bg-green/blue/yellow/red. */
-html.theme-light .bg-deepgreen { background-color: var(--color-deepgreen); }
-html.theme-light .bg-purple { background-color: var(--color-purple); }
-html.theme-light .bg-lgrey { background-color: var(--color-bg-lgrey); }
-html.theme-light .bg-pink { background-color: var(--pink); }
+html.theme-light .bg-deepgreen,
+html.theme-dark .bg-deepgreen { background-color: var(--color-deepgreen); }
+html.theme-light .bg-purple,
+html.theme-dark .bg-purple { background-color: var(--color-purple); }
+html.theme-light .bg-lgrey,
+html.theme-dark .bg-lgrey { background-color: var(--color-bg-lgrey); }
+html.theme-light .bg-pink,
+html.theme-dark .bg-pink { background-color: var(--pink); }
 
-/* Образец легенды — сплошная мнемоника, не бледный фон строки. */
-html.theme-light .dynblock-status-legend__swatch.bg-green { background-color: var(--color-green); }
-html.theme-light .dynblock-status-legend__swatch.bg-blue { background-color: var(--color-blue); }
-html.theme-light .dynblock-status-legend__swatch.bg-yellow { background-color: var(--color-yellow); }
-html.theme-light .dynblock-status-legend__swatch.bg-red { background-color: var(--color-red); }
-html.theme-light .dynblock-status-legend__swatch.bg-lgrey { background-color: var(--color-lgrey); }
+/* Секция уже разводит блоки gap. Свой нижний отступ легенды его удваивает. */
+html.theme-light .admin-table-section.table-scroll-local > .dynblock-status-legend,
+html.theme-dark .admin-table-section.table-scroll-local > .dynblock-status-legend {
+    margin-bottom: 0;
+}
 
-html.theme-light .analysis-type-badge {
+/* Образец легенды как ячейка: бледный фон и левая полоса. Крестик справа. */
+html.theme-light .dynblock-status-legend,
+html.theme-dark .dynblock-status-legend {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+html.theme-light .dynblock-status-legend__items,
+html.theme-dark .dynblock-status-legend__items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm) var(--space-lg);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+html.theme-light .dynblock-status-legend__swatch.row-tone,
+html.theme-dark .dynblock-status-legend__swatch.row-tone {
+    background-color: var(--row-tone);
+    box-shadow: inset 4px 0 0 var(--row-accent);
+}
+
+html.theme-light .dynblock-status-legend__dismiss,
+html.theme-dark .dynblock-status-legend__dismiss {
+    flex-shrink: 0;
+    margin-left: var(--space-sm);
+}
+
+/* Светлая тема: hover .btn-icon красит иконку в белый, на светлой плашке она пропадает.
+   Цветные варианты (btn-icon-primary и соседние) не трогаем. */
+html.theme-light .btn-icon:not([class*="btn-icon-"]):hover {
+    color: var(--color-black);
+    background-color: color-mix(in srgb, var(--color-black) 6%, var(--color-white));
+}
+
+html.theme-light .btn-icon:not([class*="btn-icon-"]):hover [data-icon],
+html.theme-light .btn-icon:not([class*="btn-icon-"]):hover svg {
+    color: var(--color-black);
+    fill: currentColor;
+}
+
+html.theme-light .sort-btn:not(.active),
+html.theme-light .sort-btn:not(.active):hover,
+html.theme-light .th-filter-btn:not(.is-active),
+html.theme-light .th-filter-btn:not(.is-active):hover {
+    color: var(--color-black);
+    background: var(--color-white);
+}
+
+html.theme-light .form-card {
+    background-color: var(--color-light);
+    color: var(--color-dark);
+}
+
+html.theme-light .form-card > .form-field,
+html.theme-dark .form-card > .form-field {
+    flex: 1 1 100%;
+    min-width: 0;
+}
+
+html.theme-light [data-pacient-card] [hidden],
+html.theme-dark [data-pacient-card] [hidden] {
+    display: none !important;
+}
+
+html.theme-light [data-anamnes-list]:empty,
+html.theme-dark [data-anamnes-list]:empty {
+    display: none;
+}
+
+html.theme-light [data-pacient-card] .btn.btn-outline-secondary,
+html.theme-dark [data-pacient-card] .btn.btn-outline-secondary {
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-blue);
+    border-color: var(--color-blue);
+    background: transparent;
+    box-shadow: none;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    flex: 0 0 auto;
+    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-xs);
+    line-height: 1.2;
+}
+
+html.theme-light [data-pacient-card] .btn.btn-outline-secondary:hover:not(:disabled),
+html.theme-dark [data-pacient-card] .btn.btn-outline-secondary:hover:not(:disabled) {
+    color: var(--color-white);
+    background-color: var(--color-blue);
+    border-color: var(--color-blue);
+}
+
+html.theme-light [data-pacient-card] .btn.btn-outline-secondary .nav-item__icon,
+html.theme-dark [data-pacient-card] .btn.btn-outline-secondary .nav-item__icon {
+    color: currentColor;
+}
+
+@media (max-width: 768px) {
+    html.theme-light [data-pacient-card] .dynblock-toolbar__btn-label,
+    html.theme-dark [data-pacient-card] .dynblock-toolbar__btn-label {
+        display: none !important;
+    }
+}
+
+html.theme-dark .form-label.text-black {
+    color: var(--color-white);
+}
+
+html.theme-light .form-card input:not(.custom-control-input),
+html.theme-light .form-card textarea {
+    background-color: var(--color-white);
+    color: var(--color-dark);
+}
+
+html.theme-dark .form-card {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-white);
+}
+
+html.theme-dark .form-card input:not(.custom-control-input),
+html.theme-dark .form-card textarea {
+    background-color: var(--color-bg-primary);
+    color: var(--color-white);
+    border-color: var(--color-lgrey);
+}
+
+html.theme-light [data-pacient-card] .form-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+html.theme-dark [data-pacient-card] .form-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+html.theme-light [data-pacient-card] .form-field .custom-select-trigger,
+html.theme-dark [data-pacient-card] .form-field .custom-select-trigger {
+    box-sizing: border-box;
+    height: calc(var(--line-height-normal) * 1em + var(--space-sm) * 2 + 2px);
+    min-height: 0;
+}
+
+html.theme-light [data-pacient-card] .form-field .custom-select-trigger,
+html.theme-dark [data-pacient-card] .form-field .custom-select-trigger {
+    font-size: inherit;
+}
+
+html.theme-light [data-pacient-card] input[type="date"]::-webkit-datetime-edit,
+html.theme-dark [data-pacient-card] input[type="date"]::-webkit-datetime-edit,
+html.theme-light [data-pacient-card] input[type="datetime-local"]::-webkit-datetime-edit,
+html.theme-dark [data-pacient-card] input[type="datetime-local"]::-webkit-datetime-edit {
+    padding: 0;
+    margin: 0;
+}
+
+html.theme-light .custom-control-input,
+html.theme-dark .custom-control-input {
+    display: none;
+}
+
+html.theme-light .custom-control-label,
+html.theme-dark .custom-control-label {
+    position: relative;
+    padding-left: 1.75rem;
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-dark);
+    user-select: none;
+}
+
+html.theme-light .checkbox-label::before,
+html.theme-dark .checkbox-label::before,
+html.theme-light .radio-label::before,
+html.theme-dark .radio-label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: calc(var(--space-xs) * -0.25);
+    width: 1.125rem;
+    height: 1.125rem;
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-lgrey);
+    transition: all 0.2s;
+}
+
+html.theme-light .checkbox-label::before,
+html.theme-dark .checkbox-label::before {
+    border-radius: var(--radius);
+}
+
+html.theme-light .radio-label::before,
+html.theme-dark .radio-label::before {
+    border-radius: 50%;
+}
+
+html.theme-light .custom-control-input:checked + .custom-control-label::before,
+html.theme-dark .custom-control-input:checked + .custom-control-label::before {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+html.theme-light .checkbox-label::after,
+html.theme-dark .checkbox-label::after {
+    content: '';
+    position: absolute;
+    left: 0.375rem;
+    top: 0.1875rem;
+    width: 0.25rem;
+    height: 0.5rem;
+    border: solid var(--color-white);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.2s;
+}
+
+html.theme-light .custom-control-input:checked + .checkbox-label::after,
+html.theme-dark .custom-control-input:checked + .checkbox-label::after {
+    transform: rotate(45deg) scale(1);
+}
+
+html.theme-light .radio-label::after,
+html.theme-dark .radio-label::after {
+    content: '';
+    position: absolute;
+    left: 0.375rem;
+    top: calc(var(--space-xs) * -0.25 + 0.375rem);
+    width: 0.375rem;
+    height: 0.375rem;
+    background: var(--color-white);
+    border-radius: 50%;
+    transform: scale(0);
+    transition: transform 0.2s;
+}
+
+html.theme-light .custom-control-input:checked + .radio-label::after,
+html.theme-dark .custom-control-input:checked + .radio-label::after {
+    transform: scale(1);
+}
+
+html.theme-light .tab-set,
+html.theme-dark .tab-set {
+    position: relative;
+}
+
+html.theme-light .tab-set__input,
+html.theme-dark .tab-set__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+html.theme-light .tab-set__label,
+html.theme-dark .tab-set__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--color-blue);
+    border-radius: var(--radius);
+    color: var(--color-blue);
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+html.theme-light .tab-set__panel,
+html.theme-dark .tab-set__panel {
+    display: none;
+}
+
+html.theme-light .tab-set > .tab-set__input:nth-of-type(1):checked ~ .tab-set__bar > .tab-set__label:nth-child(1),
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(1):checked ~ .tab-set__bar > .tab-set__label:nth-child(1),
+html.theme-light .tab-set > .tab-set__input:nth-of-type(2):checked ~ .tab-set__bar > .tab-set__label:nth-child(2),
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(2):checked ~ .tab-set__bar > .tab-set__label:nth-child(2),
+html.theme-light .tab-set > .tab-set__input:nth-of-type(3):checked ~ .tab-set__bar > .tab-set__label:nth-child(3),
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(3):checked ~ .tab-set__bar > .tab-set__label:nth-child(3),
+html.theme-light .tab-set > .tab-set__input:nth-of-type(4):checked ~ .tab-set__bar > .tab-set__label:nth-child(4),
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(4):checked ~ .tab-set__bar > .tab-set__label:nth-child(4),
+html.theme-light .tab-set > .tab-set__input:nth-of-type(5):checked ~ .tab-set__bar > .tab-set__label:nth-child(5),
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(5):checked ~ .tab-set__bar > .tab-set__label:nth-child(5) {
+    color: var(--color-white);
+    background-color: var(--color-blue);
+}
+
+html.theme-light .tab-set > .tab-set__input:nth-of-type(1):checked ~ .tab-set__panel--1,
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(1):checked ~ .tab-set__panel--1,
+html.theme-light .tab-set > .tab-set__input:nth-of-type(2):checked ~ .tab-set__panel--2,
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(2):checked ~ .tab-set__panel--2,
+html.theme-light .tab-set > .tab-set__input:nth-of-type(3):checked ~ .tab-set__panel--3,
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(3):checked ~ .tab-set__panel--3,
+html.theme-light .tab-set > .tab-set__input:nth-of-type(4):checked ~ .tab-set__panel--4,
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(4):checked ~ .tab-set__panel--4,
+html.theme-light .tab-set > .tab-set__input:nth-of-type(5):checked ~ .tab-set__panel--5,
+html.theme-dark .tab-set > .tab-set__input:nth-of-type(5):checked ~ .tab-set__panel--5 {
+    display: flex;
+}
+
+html.theme-light .analysis-type-badge,
+html.theme-dark .analysis-type-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;

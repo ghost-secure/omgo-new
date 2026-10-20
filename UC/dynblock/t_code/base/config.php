@@ -48,7 +48,7 @@ return [
 CODE
         ,
     ],
-    'toolbar_extra' => static function (): string {
+    'toolbar_left' => static function (): string {
         return Flow::button([
             'id' => 'codes',
             'action' => 'WF_CODEPULL',
