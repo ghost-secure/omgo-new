@@ -157,6 +157,15 @@
         "при 2 проверяется подтверждение прогрессирования"
       ],
       "doc": "project/readme/patients.md"
+    },
+    {
+      "intent": "композиция формы after_fields embed аддон карточка пациента",
+      "answer_skeleton": "form-composition.md — карточка товара магазина: нативная base и файл project/UC/form/{table}/addon/after_fields.php, дети пишет FormEmbedSync. Карточка пациента OMGO — project/phpfiles/form/pacient.php и TAnalysisHook, шаг card. Этот слот её не собирает.",
+      "forbid_generic": [
+        "карточку пациента OMGO класть в addon/after_fields.php",
+        "FormEmbedSync сохраняет поля заявки"
+      ],
+      "doc": "core/readme/form-composition.md"
     }
   ],
   "notes": [
