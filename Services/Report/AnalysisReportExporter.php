@@ -1,0 +1,276 @@
+<?php
+
+namespace Services\Report;
+
+use Core\Database\QueryBuilder;
+use Core\Excel\Excel;
+
+/**
+ * Сборка xlsx по всем заявкам. Легаси: cron/reglament/report-alltest-new.php.
+ * Архив до SPLIT_AT пишется один раз. Актуальный срез — каждый запуск, хранятся 30 файлов.
+ */
+class AnalysisReportExporter
+{
+    public const PAGE = 2000;
+
+    public function __construct(
+        private readonly AnalysisReportQuery $query,
+        private readonly AnalysisReportFiles $files,
+        private readonly QueryBuilder $db
+    ) {
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function run(): array
+    {
+        $started = microtime(true);
+        $run = [
+            'started' => date('Y-m-d H:i:s'),
+            'split' => AnalysisReportColumns::SPLIT_AT,
+            'dir' => $this->files->directory(),
+            'reports' => [],
+        ];
+
+        foreach ($this->options() as $option => $params) {
+            $archive = $this->files->archivePath($option);
+            if (!is_file($archive)) {
+                $run['reports'][] = $this->export(
+                    $option,
+                    AnalysisReportColumns::LABEL_BEFORE,
+                    $this->filter($params, true),
+                    $archive
+                );
+            } else {
+                echo 'SKIP: ' . $option . ' / архив — файл уже есть: ' . basename($archive) . "\n";
+                $run['reports'][] = [
+                    'option' => $option,
+                    'segment' => AnalysisReportColumns::LABEL_BEFORE,
+                    'file' => basename($archive),
+                    'status' => 'skip',
+                    'seconds' => 0,
+                    'rows' => 0,
+                ];
+            }
+
+            $rolling = $this->files->rollingPath($option, date('Ymd'));
+            $run['reports'][] = $this->export(
+                $option,
+                AnalysisReportColumns::LABEL_AFTER,
+                $this->filter($params, false),
+                $rolling
+            );
+            $this->files->pruneRolling($option);
+            gc_collect_cycles();
+        }
+
+        $run['finished'] = date('Y-m-d H:i:s');
+        $run['seconds'] = round(microtime(true) - $started, 3);
+        $this->writeLog($run);
+
+        return $run;
+    }
+
+    /**
+     * @return array<string, array{code: string, where?: array<string, int>}>
+     */
+    private function options(): array
+    {
+        $options = [
+            'sponsor' => ['code' => AnalysisReportColumns::SPONSOR],
+            'auditor' => ['code' => AnalysisReportColumns::AUDITOR],
+            'lab' => ['code' => AnalysisReportColumns::LAB],
+        ];
+        $labs = $this->db->reset()->select(['cat', 'stat_exportallpacient'])->from('t_lab')->get();
+        foreach ($labs as $lab) {
+            if ((int) ($lab['stat_exportallpacient'] ?? 0) === 0) {
+                $id = (int) ($lab['cat'] ?? 0);
+                if ($id > 0) {
+                    $options['lab' . $id] = [
+                        'code' => AnalysisReportColumns::LAB,
+                        'where' => ['v.view_lab' => $id],
+                    ];
+                }
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * @param array{code: string, where?: array<string, int>} $params
+     * @return array<string, mixed>
+     */
+    private function filter(array $params, bool $before): array
+    {
+        $filter = ['code' => $params['code']];
+        if (!empty($params['where'])) {
+            $filter['where'] = $params['where'];
+        }
+        if ($before) {
+            $filter['createdBefore'] = AnalysisReportColumns::SPLIT_AT;
+        } else {
+            $filter['createdFrom'] = AnalysisReportColumns::SPLIT_AT;
+        }
+
+        return $filter;
+    }
+
+    /**
+     * @param array<string, mixed> $filter
+     * @return array<string, mixed>
+     */
+    private function export(string $option, string $segment, array $filter, string $path): array
+    {
+        $started = microtime(true);
+        $offset = 0;
+        $page = 0;
+        $written = 0;
+        $exporter = null;
+        $code = (string) $filter['code'];
+        unset($filter['code']);
+
+        try {
+            $titles = AnalysisReportColumns::titles($code);
+            $columnCount = count($titles);
+            while (true) {
+                $rows = $this->query->rows($code, $filter, self::PAGE, $offset);
+                $page++;
+                if ($rows === []) {
+                    if ($page === 1) {
+                        echo 'SKIP: ' . $option . ' / ' . $segment . " — нет строк\n";
+                    }
+                    break;
+                }
+                if ($exporter === null) {
+                    $exporter = $this->openSheet($titles, $columnCount);
+                    echo 'START: ' . $option . ' / ' . $segment . "\n";
+                }
+                foreach ($rows as $row) {
+                    $exporter->addRow(20);
+                    $written++;
+                    foreach ($this->query->cells($code, $row) as $cell) {
+                        if ($cell === '') {
+                            $cell = '-';
+                        }
+                        $exporter->addCell($cell, ['left'], null, 'string');
+                    }
+                }
+                echo ' └ page: ' . $page . ' / rows ' . $written . "\n";
+                if (count($rows) < self::PAGE) {
+                    break;
+                }
+                $offset += self::PAGE;
+                unset($rows);
+                if ($page % 5 === 0) {
+                    gc_collect_cycles();
+                }
+            }
+
+            if ($exporter === null) {
+                return $this->result($option, $segment, $path, 'ok', $started, 0);
+            }
+
+            $exporter->setfreezePane('A3');
+            $exporter->saveToFile($path);
+            unset($exporter);
+            gc_collect_cycles();
+            echo '└ Saved: ' . basename($path) . ' / rows ' . $written . "\n";
+
+            return $this->result($option, $segment, $path, 'ok', $started, $written);
+        } catch (\Throwable $e) {
+            echo 'ERROR: ' . $option . ' / ' . $segment . ' / ' . $e->getMessage() . "\n";
+
+            return $this->result($option, $segment, $path, 'error', $started, $written, $e->getMessage());
+        }
+    }
+
+    /**
+     * @param list<string> $titles
+     */
+    private function openSheet(array $titles, int $columnCount): Excel
+    {
+        $exporter = new Excel();
+        $exporter->addStyle('header', [
+            'align' => 'center',
+            'valign' => 'middle',
+            'bold' => true,
+            'wrap' => true,
+            'size' => 16,
+        ]);
+        $exporter->addStyle('tableheader', [
+            'align' => 'center',
+            'valign' => 'middle',
+            'bold' => true,
+            'border' => 'thick',
+            'wrap' => true,
+        ]);
+        $exporter->addStyle('left', [
+            'align' => 'left',
+        ]);
+        $exporter->addRow(30)->addCell('Отчет по всем пациентам на дату ' . date('d.m.Y H:i:s'), 'header', null);
+        $exporter->merge(
+            $exporter->getColLetter(0) . $exporter->getRow(),
+            $exporter->getColLetter(10) . $exporter->getRow()
+        );
+        $exporter->addRow();
+        $exporter->setDefaultWidth(10);
+        $exporter->renameSheet('Все пациенты');
+        foreach ($titles as $title) {
+            $exporter->addCell($title, 'tableheader');
+        }
+        if ($columnCount > 0) {
+            $exporter->addFilter(0, $columnCount - 1, 0);
+        }
+
+        return $exporter;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function result(
+        string $option,
+        string $segment,
+        string $path,
+        string $status,
+        float $started,
+        int $rows,
+        ?string $error = null
+    ): array {
+        $result = [
+            'option' => $option,
+            'segment' => $segment,
+            'file' => basename($path),
+            'status' => $status,
+            'seconds' => round(microtime(true) - $started, 3),
+            'rows' => $rows,
+        ];
+        if ($error !== null) {
+            $result['error'] = $error;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param array<string, mixed> $run
+     */
+    private function writeLog(array $run): void
+    {
+        $path = rtrim(LOG_PATH, '/\\') . DIRECTORY_SEPARATOR . 'report.log';
+        $json = json_encode($run, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        if ($json === false) {
+            echo "LOG: не удалось собрать json\n";
+
+            return;
+        }
+        if (file_put_contents($path, $json . PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
+            echo 'LOG: не удалось записать ' . $path . "\n";
+
+            return;
+        }
+        echo 'LOG: ' . $path . "\n";
+    }
+}

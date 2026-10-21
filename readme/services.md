@@ -17,8 +17,9 @@
 | `Services\Pdf\RemoteHtmlToPdf` | curl в `form/pdf.php` | POST на `PRINTPDF_URL`. Реализация `HtmlToPdfConverter`. `PRINTPDF_REMOTE=0` сервис не вызывает, ссылка отдаёт HTML |
 | `Services\AuthFormsService` | `web/auth_.php`, `reg_.php`, `recover_.php` | вход, регистрация врача, новый пароль. См. [auth-and-menu.md](auth-and-menu.md) |
 | `Services\AddressLookupService` | `Object\Dadata\Dadata::addCache` | кэш `t_dadata` и подсказка адреса, токен `DADATA_TOKEN` |
-| `Services\NotifyService` | `Object\Notify\Notify` | письмо и колокольчик по `t_notify_type` (типы 8 и 10) |
-| `Services\MailService` | почта легаси | SMTP через PHPMailer или `mail()`; testmode — `runtime/logs/mail.log` |
+| `Services\NotifyService` | `Object\Notify\Notify` | письмо и строка `t_notify` по `t_notify_type`. Вызывают вход (8, 10) и воркфлоу заявки (1–7, 9, 12, 13). Тип 11 (активация врача) ещё не подключён |
+| `Services\MailService` | почта легаси | SMTP через PHPMailer или `mail()`. Реквизиты — `integration.mail` из `MAIL_*`. `testmode` пишет `runtime/logs/mail.log` |
+| `Services\Report\AnalysisReportExporter` | `Object\Report` + `report-alltest-new.php` | готовые xlsx заявок в `runtime/cache/reports`. Кнопка и роли — [analysis-reports.md](analysis-reports.md) |
 
 `tblusers.role` (1/2/3/4 в `auth.manager_roles`) — группа доступа ядра, не эти константы.
 
@@ -45,6 +46,12 @@
 `CodeService::findIdleCode()` / `activate()` — проверка и трата кода на старте заявки. `date_activate` пишется unix-числом.
 
 ## История логики
+
+### 2026-10-21 — отчёты заявок
+
+- **Тип:** новая логика
+- **Было:** сервиса готового Excel не было
+- **Стало:** `AnalysisReportColumns`, `AnalysisReportQuery`, `AnalysisReportFiles`, `AnalysisReportExporter`. См. [analysis-reports.md](analysis-reports.md)
 
 ### 2026-10-20 — документы кабинета
 

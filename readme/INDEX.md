@@ -25,6 +25,7 @@
 | [docs.md](docs.md) | Документы кабинета: `/manager/dokumenty/` |
 | [pdf.md](pdf.md) | Заключение PDF: `/pdf/{guid}/`, шаблон по типу анализа, внешняя печать |
 | [patients.md](patients.md) | Заявка = пациент и анализ: список, код, карточка черновика |
+| [analysis-reports.md](analysis-reports.md) | Готовые Excel-отчёты заявок: кнопка «Отчет», файл по роли, крон |
 | [analysis-workflow.md](analysis-workflow.md) | Колонка «Действия»: ссылки и меню воркфлоу заявки |
 | [block-expander.md](block-expander.md) | Пилюля на нижней границе блока: раскрывает подблок `data-block-expander-more` |
 | [assistant-index.json](assistant-index.json) | Карта документов для помощника: путь, темы, краткое описание |

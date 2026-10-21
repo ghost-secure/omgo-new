@@ -94,6 +94,27 @@ return [
             );
         },
 
+        \Services\Report\AnalysisReportQuery::class => function ($c) {
+            return new \Services\Report\AnalysisReportQuery(
+                $c->get(\Core\Database\QueryBuilder::class),
+                $c->get(\Core\Config::class)
+            );
+        },
+
+        \Services\Report\AnalysisReportFiles::class => function ($c) {
+            return new \Services\Report\AnalysisReportFiles(
+                $c->get(\Core\Database\QueryBuilder::class)
+            );
+        },
+
+        \Services\Report\AnalysisReportExporter::class => function ($c) {
+            return new \Services\Report\AnalysisReportExporter(
+                $c->get(\Services\Report\AnalysisReportQuery::class),
+                $c->get(\Services\Report\AnalysisReportFiles::class),
+                $c->get(\Core\Database\QueryBuilder::class)
+            );
+        },
+
         'mailer' => function ($c) {
             return new \Services\MailService();
         },

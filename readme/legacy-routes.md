@@ -50,6 +50,10 @@
 
 Шаблон, роли и внешняя печать — [pdf.md](pdf.md).
 
+## Отчёт Excel
+
+`/report/pacient/` и `/report/pacient/?target=new` — не страница каталога. `matchReport()` отдаёт `report/pacient.php` без шаблона кабинета. Файл выбирает роль. Подробности — [analysis-reports.md](analysis-reports.md).
+
 ## Паспорт анализа
 
 `/manager/passport/{guid}/` — `t_analysis.varc_guid`. Страница `Helpers\Page::PASSPORT`, `mapurl = passport`, php `web/passport.php`, шаблон `light.php`. `catalog.status = 0`. Параметр: `passport_guid`. Отдаёт `matchPassport()`.
@@ -69,6 +73,12 @@
 Страница в каталоге со `status = 0`. Карта в коде: `LegacyUrlStrategy::plannedGuidRoutes()`.
 
 ## История логики
+
+### 2026-10-21 — скачивание отчёта заявок
+
+- **Тип:** новая логика
+- **Было:** адреса готового Excel не было
+- **Стало:** `/report/pacient/` отдаёт файл без шаблона кабинета. См. [analysis-reports.md](analysis-reports.md)
 
 ### 2026-10-18 — отступ группы характеристик на паспорте
 

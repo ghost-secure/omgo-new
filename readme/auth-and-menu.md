@@ -44,7 +44,7 @@
 
 Токен сессии и список доменов легаси заменяет CSRF ядра (`public: false` у этих трёх эндпоинтов). Пути форм и `/jsapi/csrf` есть в `auth.public_paths`.
 
-Почта: `Services\MailService`. Вне `production` без настройки SMTP письма пишутся в `runtime/logs/mail.log` (`integration.mail.testmode`). На бою: `MAIL_TESTMODE=0` и SMTP (`MAIL_IS_SMTP`, `MAIL_SMTP_*`) либо `mail()`. Push легаси не отправляем.
+Почта: `Services\MailService`. Реквизиты уже в `project/config/integration.php` (`integration.mail`), значения — `MAIL_*` в корневом `.env`. `MAIL_TESTMODE=1` пишет HTML в `runtime/logs/mail.log` и наружу не отправляет. На бою: `MAIL_TESTMODE=0`, тогда SMTP (`MAIL_IS_SMTP`, `MAIL_SMTP_*`, `MAIL_FROM_*`) через PHPMailer, иначе `mail()`. Получатели писем — из `t_notify_type` и учёток, не из отдельных почтовых списков. Push легаси не отправляем.
 
 Корень `/` — `Strategy\HomepageStrategy`. Публички нет: и `/`, и `/manager/` отвечают 302 на список пациентов `/manager/mant_pacient/`. Разбор хвостов URL (паспорт врача и будущие GUID) — [legacy-routes.md](legacy-routes.md).
 

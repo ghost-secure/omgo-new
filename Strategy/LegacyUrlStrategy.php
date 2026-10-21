@@ -14,6 +14,7 @@ use Helpers\Page;
  * Включены вход в кабинет (/manager/), паспорт врача, форма пациента
  * (/manager/pacient/ без GUID и /manager/pacient/{guid}/), паспорт анализа
  * /manager/passport/{guid}/. PDF /pdf/{guid}/ каталог не читает: это печать, не страница.
+ * /report/pacient/ отдаёт готовый xlsx, тоже без каталога.
  * Форма лаборатории — plannedGuidRoutes(), match() её не отдаёт.
  */
 class LegacyUrlStrategy implements RouteStrategy
@@ -35,6 +36,11 @@ class LegacyUrlStrategy implements RouteStrategy
         $pdf = $this->matchPdf($urlParts);
         if ($pdf !== null) {
             return $pdf;
+        }
+
+        $report = $this->matchReport($urlParts);
+        if ($report !== null) {
+            return $report;
         }
 
         $passport = $this->matchPassport($urlParts, $repository);
@@ -126,6 +132,27 @@ class LegacyUrlStrategy implements RouteStrategy
         $attributes = ['analysis_guid' => $guid];
 
         return new RouteMatch([$page], $page, $attributes, $attributes);
+    }
+
+    private function matchReport(array $urlParts): ?RouteMatch
+    {
+        if ($urlParts !== ['report', 'pacient']) {
+            return null;
+        }
+
+        $page = new \Core\Page\Page(
+            id: 0,
+            name: 'Отчет',
+            mapurl: 'report/pacient',
+            id_up: null,
+            html: null,
+            php: 'report/pacient.php',
+            pattern: null,
+            patternId: null,
+            status: 1,
+        );
+
+        return new RouteMatch([$page], $page);
     }
 
     private function matchPassport(array $urlParts, PageRepository $repository): ?RouteMatch

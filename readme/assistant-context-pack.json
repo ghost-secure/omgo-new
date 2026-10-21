@@ -1,8 +1,29 @@
 {
   "version": 1,
-  "updated_at": "2026-10-20",
+  "updated_at": "2026-10-21",
   "purpose": "Короткие проверенные ответы консультанта. Только то, что легко перепутать. Не каталог всех README.",
   "hotspots": [
+    {
+      "intent": "скачать анализы excel отчет список пациентов выгрузить",
+      "answer_skeleton": "На /manager/mant_pacient/ кнопки «Настроить таблицу» и «Выгрузить в Excel» скрыты. «Отчет» слева скачивает готовый xlsx: /report/pacient/ — до 1 января 2026, ?target=new — самый новый файл после этой даты. Врач кнопку не видит. Лаборатория с stat_exportallpacient=0 получает lab{id}, иначе общий lab. Спонсор — sponsor без ФИО, спонсор-аудит — auditor. Поздняя роль переписывает ключ. Файлы пишет крон php project/scripts/cron/report-alltest.php в runtime/cache/reports. Пока крон не запускали, ответ no data.",
+      "forbid_generic": [
+        "кнопка Выгрузить в Excel на списке заявок собирает файл из грида",
+        "врач скачивает тот же файл, что администратор",
+        "граница архива — 1 октября 2025",
+        "лаборатория всегда получает все заявки"
+      ],
+      "doc": "project/readme/analysis-reports.md"
+    },
+    {
+      "intent": "кому уходит письмо регистрации MAIL_ADMIN_EMAIL почта оповещение",
+      "answer_skeleton": "Тип 10 (новая регистрация) и типы 5 и 7 заявки уходят учёткам с ролью администратора в t_access_matrix и непустым email. Списка адресов в integration.php нет: там только SMTP (MAIL_SMTP_*, MAIL_FROM_*) плюс уже бывшие dadata и printpdf. MAIL_TESTMODE=1 пишет письмо в runtime/logs/mail.log и SMTP не вызывает. Тип 11 (активация врача) в новом кабинете не вызывается.",
+      "forbid_generic": [
+        "письмо регистрации уходит на MAIL_ADMIN_EMAIL",
+        "админы письма — это MAIL_EMAIL",
+        "активация врача уже шлёт тип 11"
+      ],
+      "doc": "project/readme/auth-and-menu.md"
+    },
     {
       "intent": "заголовок страницы врачи пользователи 1. Пользователи t_users",
       "answer_skeleton": "Оба списка на таблице t_users. Имя справочника «1. Пользователи» в заголовок этих страниц не попадает. /manager/doctors/ показывает «Врачи» (шаблоны doctors и doctors_lab, meta.title). /manager/admin/users/ показывает «Пользователи» (t_users/base).",

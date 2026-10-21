@@ -339,16 +339,26 @@ $config['row_styling'] = \Core\Container::getInstance()
     ->get(\Services\AnalysisService::class)
     ->statusRowStyling();
 
+$config['toolbar_settings'] = false;
+$config['toolbar_excel'] = false;
+
 $config['toolbar_left'] = static function (): string {
-    $analysis = \Core\Container::getInstance()->get(\Services\AnalysisService::class);
+    $container = \Core\Container::getInstance();
+    $analysis = $container->get(\Services\AnalysisService::class);
     $auth = function_exists('auth') ? auth() : null;
     $user = $auth ? $auth->getUser() : null;
-    $scope = $analysis->pacientListScope(is_array($user) ? $user : null);
-    if (empty($scope['add_button']) || (new \Core\Request())->isMobile()) {
-        return '';
+    $user = is_array($user) ? $user : null;
+    $scope = $analysis->pacientListScope($user);
+    $html = '';
+    $reports = $container->get(\Services\Report\AnalysisReportFiles::class);
+    if ($reports->showMenu($user)) {
+        $html .= $reports->menuHtml();
+    }
+    if (!empty($scope['add_button']) && !(new \Core\Request())->isMobile()) {
+        $html .= \Services\AnalysisService::addPacientButtonHtml();
     }
 
-    return \Services\AnalysisService::addPacientButtonHtml();
+    return $html;
 };
 
 return $config;

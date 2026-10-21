@@ -1,1 +1,12 @@
 /* Стили панели фильтров лежат в project/overrides/assets/config-light.css. */
+
+.dropdown-menu.report-download-menu {
+    width: max-content;
+    min-width: 0;
+    max-width: min(16rem, calc(100vw - 1rem));
+}
+
+.dropdown-menu.report-download-menu a {
+    display: block;
+    white-space: normal;
+}

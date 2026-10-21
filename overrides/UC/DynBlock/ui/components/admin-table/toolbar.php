@@ -2,6 +2,7 @@
 /**
  * Тулбар админской таблицы. Проектный пробный слой.
  * Слева — кнопки текущего экрана. Справа — нативные кнопки вида и «Фильтры».
+ * Флаги toolbar_settings и toolbar_excel = false прячут «Настроить таблицу» и «Выгрузить в Excel».
  *
  * @var \UC\DynBlock $dynBlock
  * @var \UC\DynBlock\AdminTableView $view
@@ -13,6 +14,9 @@ $primary = $view->getConfig()['filter_primary'] ?? [];
 if (!is_array($primary)) {
     $primary = [];
 }
+$gridConfig = $view->getConfig();
+$showTableSettings = ($gridConfig['toolbar_settings'] ?? true) !== false;
+$showExcel = ($gridConfig['toolbar_excel'] ?? true) !== false;
 $primaryList = [];
 foreach ($primary as $column) {
     $column = trim((string) $column);
@@ -72,6 +76,7 @@ foreach ($primary as $column) {
             <span class="nav-item__icon" data-icon="Arrows/expand-diagonal-2-line"></span>
             <span class="dynblock-toolbar__btn-label">На экран</span>
         </button>
+        <?php if ($showTableSettings): ?>
         <button type="button"
                 class="btn btn-outline-secondary dynblock-toolbar__icon-btn"
                 data-toolbar-action="table-settings"
@@ -81,6 +86,8 @@ foreach ($primary as $column) {
             <span class="nav-item__icon" data-icon="System/settings-line"></span>
             <span class="dynblock-toolbar__btn-label">Настроить таблицу</span>
         </button>
+        <?php endif; ?>
+        <?php if ($showExcel): ?>
         <button type="button"
                 class="btn btn-outline-secondary dynblock-toolbar__icon-btn"
                 data-toolbar-action="export-excel"
@@ -90,5 +97,6 @@ foreach ($primary as $column) {
             <span class="nav-item__icon" data-icon="Document/file-excel-line"></span>
             <span class="dynblock-toolbar__btn-label">Выгрузить в Excel</span>
         </button>
+        <?php endif; ?>
     </div>
 </div>
