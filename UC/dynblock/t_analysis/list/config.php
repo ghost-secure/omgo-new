@@ -331,9 +331,30 @@ $config['filter_fields'] = [
         'label' => 'Фамилия врача',
         'type' => 'varc',
     ],
+    [
+        'column' => 'filter_express',
+        'label' => 'Экспресс',
+        'type' => 'flag',
+    ],
+    [
+        'column' => 'filter_late_delivery',
+        'label' => 'Срок доставки превышен',
+        'type' => 'flag',
+    ],
+    [
+        'column' => 'filter_late_analysis',
+        'label' => 'Срок проведения анализа превышен',
+        'type' => 'flag',
+    ],
 ];
 
-$config['filter_primary'] = ['pacient_surname', 'doctor_surname'];
+$config['filter_primary'] = [
+    'pacient_surname',
+    'doctor_surname',
+    'filter_express',
+    'filter_late_delivery',
+    'filter_late_analysis',
+];
 
 $config['row_styling'] = \Core\Container::getInstance()
     ->get(\Services\AnalysisService::class)

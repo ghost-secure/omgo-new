@@ -105,11 +105,11 @@ function omgoFixed(string $label, string $name, string $value, string $text): vo
     echo '</div>';
 }
 
-function omgoCheck(string $label, string $name, bool $checked, string $toggle = '', bool $locked = false): void
+function omgoCheck(string $label, string $name, bool $checked, string $toggle = '', bool $locked = false, string $value = '1'): void
 {
     $id = 'omgo-check-' . omgoSeq();
     echo '<div class="d-flex align-center gap-sm">';
-    echo '<input type="checkbox" class="custom-control-input" id="' . $id . '" value="1"';
+    echo '<input type="checkbox" class="custom-control-input" id="' . $id . '" value="' . omgoH($value) . '"';
     if (!$locked) {
         echo ' name="' . omgoH($name) . '"';
     }
@@ -126,15 +126,17 @@ function omgoCheck(string $label, string $name, bool $checked, string $toggle = 
     echo '<label for="' . $id . '" class="custom-control-label checkbox-label">' . omgoH($label) . '</label>';
     echo '</div>';
     if ($locked && $checked) {
-        echo '<input type="hidden" name="' . omgoH($name) . '" value="1">';
+        echo '<input type="hidden" name="' . omgoH($name) . '" value="' . omgoH($value) . '">';
     }
 }
 
-function omgoRadio(string $label, string $name, array $options, $value, array $toggles = [], bool $required = false): void
+function omgoRadio(string $label, string $name, array $options, $value, array $toggles = [], bool $required = false, bool $html = false): void
 {
     $current = (string) $value;
     echo '<div class="form-field d-flex flex-column gap-sm w-full">';
-    \UC\FormLabel::render($label, $required);
+    if ($label !== '') {
+        \UC\FormLabel::render($label, $required);
+    }
     echo '<div class="d-flex flex-column gap-sm">';
     foreach ($options as $id => $text) {
         $uid = 'omgo-radio-' . omgoSeq();
@@ -146,7 +148,8 @@ function omgoRadio(string $label, string $name, array $options, $value, array $t
             echo ' data-form-toggle="' . omgoH($toggle) . '"';
         }
         echo '>';
-        echo '<label for="' . $uid . '" class="custom-control-label radio-label">' . omgoH((string) $text) . '</label>';
+        $caption = $html ? (string) $text : omgoH((string) $text);
+        echo '<label for="' . $uid . '" class="custom-control-label radio-label">' . $caption . '</label>';
         echo '</div>';
     }
     echo '</div></div>';
@@ -247,5 +250,149 @@ function omgoAnamnesRow(array $options, array $row): void
     echo '<div data-anamnes-other class="d-flex flex-column gap-md"' . ($other ? '' : ' hidden') . '>';
     omgoField('Укажите свое название', 'fields[anamnes][varc_anamnes][]', $other ? (string) ($row['varc_anamnes'] ?? '') : '');
     omgoField('Степень родства', 'fields[anamnes][varc_kin][]', $other ? (string) ($row['varc_kin'] ?? '') : '');
+    echo '</div></div>';
+}
+
+function omgoPlain(string $label, string $text): void
+{
+    echo '<div class="form-field d-flex flex-column gap-xs w-full">';
+    \UC\FormLabel::render($label);
+    echo '<div>' . omgoH($text) . '</div>';
+    echo '</div>';
+}
+
+function omgoArea(string $label, string $name, string $value, bool $required = false): void
+{
+    echo '<div class="form-field d-flex flex-column gap-xs w-full">';
+    \UC\FormLabel::render($label, $required);
+    echo '<textarea name="' . omgoH($name) . '"' . ($required ? ' data-required' : '') . '>' . omgoH($value) . '</textarea>';
+    echo '</div>';
+}
+
+function omgoDate(string $label, string $name, string $value, bool $required = false): void
+{
+    echo '<div class="form-field d-flex flex-column gap-xs w-full">';
+    \UC\FormLabel::render($label, $required);
+    echo '<input type="date" name="' . omgoH($name) . '" value="' . omgoH($value) . '"' . ($required ? ' data-required' : '') . '>';
+    echo '</div>';
+}
+
+/**
+ * Материал лаборатории: галка врача (если уже стоит — не снимается), маркировка,
+ * и либо радио «анализ выполнен на этом материале», либо галка «вывести в заключение».
+ *
+ * @param list<int>|string $selected
+ */
+function omgoLabMaterial(
+    string $title,
+    string $flag,
+    bool $on,
+    bool $locked,
+    string $markLabel,
+    string $markName,
+    string $markValue,
+    int $materialId,
+    string $mode,
+    $selected
+): void {
+    echo '<div class="d-flex flex-column gap-md" style="flex: 1 1 16rem">';
+    omgoCheck($title, 'fields[' . $flag . ']', $on, $flag, $locked);
+    echo '<div data-wrapper="' . omgoH($flag) . '" class="d-flex flex-column gap-md">';
+    omgoField($markLabel, 'fields[' . $markName . ']', $markValue, true);
+    if ($mode === 'check') {
+        $ids = is_array($selected) ? array_map('intval', $selected) : [];
+        omgoCheck(
+            'Вывести в заключение',
+            'fields[multiselect_materialexec][]',
+            in_array($materialId, $ids, true),
+            '',
+            false,
+            (string) $materialId
+        );
+    } else {
+        $current = is_array($selected) ? (string) (int) ($selected[0] ?? 0) : (string) $selected;
+        if ($current === '0') {
+            $current = '';
+        }
+        omgoRadio('Анализ выполнен на этом материале', 'fields[view_materialexec]', [
+            (string) $materialId => '',
+        ], $current, [], true);
+    }
+    echo '</div></div>';
+}
+
+function omgoAssayHead(
+    string $typeName,
+    ?string $fixedMethodId,
+    string $fixedMethodText,
+    array $methods,
+    $methodValue,
+    array $reagents,
+    $reagentValue
+): void {
+    omgoPlain('Выполненный анализ', $typeName);
+    if ($fixedMethodId !== null) {
+        omgoFixed('Метод анализа', 'fields[view_method]', $fixedMethodId, $fixedMethodText);
+    } else {
+        omgoSelect('Метод анализа', 'fields[view_method]', $methods, $methodValue, true);
+    }
+    omgoSelect('Используемые реагенты', 'fields[view_reagent]', $reagents, $reagentValue);
+}
+
+/**
+ * Онкогенные варианты AKT. Кнопки те же, что у семейного анамнеза карточки пациента.
+ *
+ * @param list<array<string, mixed>> $rows
+ * @param array<int, string> $classes
+ */
+function omgoOnko(array $rows, array $classes): void
+{
+    $filled = [];
+    foreach ($rows as $row) {
+        if (trim((string) ($row['varc_variant'] ?? '')) !== '') {
+            $filled[] = $row;
+        }
+    }
+    if ($filled === []) {
+        $filled[] = [];
+    }
+    echo '<div class="d-flex flex-column gap-md w-full" data-anamnes-list>';
+    foreach ($filled as $row) {
+        omgoOnkoRow($classes, $row);
+    }
+    echo '</div>';
+    echo '<template data-anamnes-template>';
+    omgoOnkoRow($classes, []);
+    echo '</template>';
+    echo '<div>';
+    omgoActionButton('Добавить другой онкогенный вариант', 'System/add-line', 'data-anamnes-add');
+    echo '</div>';
+}
+
+/**
+ * @param array<int, string> $classes
+ * @param array<string, mixed> $row
+ */
+function omgoOnkoRow(array $classes, array $row): void
+{
+    $depth = (string) ($row['cnt_vardepth'] ?? '');
+    if ($depth === '0') {
+        $depth = '';
+    }
+    echo '<div data-anamnes class="d-flex flex-column gap-md">';
+    echo '<div class="d-flex align-end gap-sm" style="flex-wrap: wrap">';
+    echo '<div style="flex: 1 1 12rem; min-width: 0">';
+    omgoField('Название варианта', 'fields[onko][varc_variant][]', (string) ($row['varc_variant'] ?? ''), true);
+    echo '</div>';
+    echo '<div style="flex: 1 1 10rem; min-width: 0">';
+    omgoField('Частота аллеля', 'fields[onko][varc_allel][]', (string) ($row['varc_allel'] ?? ''));
+    echo '</div>';
+    echo '<div style="flex: 1 1 10rem; min-width: 0">';
+    omgoField('Глубина прочтения варианта', 'fields[onko][cnt_vardepth][]', $depth);
+    echo '</div>';
+    echo '<div style="flex: 1 1 12rem; min-width: 0">';
+    omgoSelect('Класс онкогенности', 'fields[onko][view_onko][]', $classes, $row['view_onko'] ?? '', true);
+    echo '</div>';
+    omgoActionButton('Удалить', 'System/delete-bin-line', 'data-anamnes-remove');
     echo '</div></div>';
 }

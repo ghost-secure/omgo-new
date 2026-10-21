@@ -9,7 +9,7 @@
 | Сервис | Легаси | Сейчас |
 |--------|--------|--------|
 | `Services\RoleService` | `Object\Role\Role` | константы `t_roles.cat` |
-| `Services\AnalysisService` | `Object\Analysis\Analysis` | типы и статусы заявки, грид, карточка черновика (`draftByGuid`, `prepareDraftSave`), кто открывает заявку (`denyReason`). См. [patients.md](patients.md) |
+| `Services\AnalysisService` | `Object\Analysis\Analysis` | типы и статусы заявки, грид, карточка черновика (`draftByGuid`, `prepareDraftSave`), форма лаборатории (`prepareLabSave`, `labFormDeny`), кто открывает заявку (`denyReason`). См. [patients.md](patients.md) |
 | `Services\AnalysisWorkflowService` | `Replace` + `aftersave/t_events.php` | меню `t_wf`, запись события, смена статуса. См. [analysis-workflow.md](analysis-workflow.md) |
 | `Services\CodeService` | `Object\Code\Code` | пул `t_code`: префикс типа + два блока по 4 символа; `isActivated`, SQL свободного/активированного, ФИО. См. [codes.md](codes.md) |
 | `Services\DocumentService` | `Dataprovider::getDocType()` | вкладки `t_docs_type` и строки `t_docs` для `/manager/dokumenty/`. См. [docs.md](docs.md) |
@@ -19,7 +19,7 @@
 | `Services\AddressLookupService` | `Object\Dadata\Dadata::addCache` | кэш `t_dadata` и подсказка адреса, токен `DADATA_TOKEN` |
 | `Services\NotifyService` | `Object\Notify\Notify` | письмо и строка `t_notify` по `t_notify_type`. Вызывают вход (8, 10) и воркфлоу заявки (1–7, 9, 12, 13). Тип 11 (активация врача) ещё не подключён |
 | `Services\MailService` | почта легаси | SMTP через PHPMailer или `mail()`. Реквизиты — `integration.mail` из `MAIL_*`. `testmode` пишет `runtime/logs/mail.log` |
-| `Services\Report\AnalysisReportExporter` | `Object\Report` + `report-alltest-new.php` | готовые xlsx заявок в `runtime/cache/reports`. Кнопка и роли — [analysis-reports.md](analysis-reports.md) |
+| `Services\Report\AnalysisReportExporter` | `Object\Report` + `report-alltest-new.php` | готовые xlsx заявок в `runtime/cache/reports`, файл пишется потоком. Кнопка и роли — [analysis-reports.md](analysis-reports.md) |
 
 `tblusers.role` (1/2/3/4 в `auth.manager_roles`) — группа доступа ядра, не эти константы.
 
@@ -39,13 +39,25 @@
 
 `viewLabel()` — подпись справочника `view_*`. Id `0` даёт пустую строку: ячейка рисует прочерк. Так выводятся «Статус мутации» и «Статус HRD».
 
-`analysisGridQuery()` — JOIN и `addSelect` грида заявок (код пациента, ФИО, дубль, регионы, мнемоники `status_color` и `test_color`). Туда же SQL фильтров виртуальных столбцов, фамилий и unix-дат материала. Один и тот же запрос у списка `/manager/mant_pacient/` и у паспорта врача. Фильтр по роли в метод не входит: его задаёт `pacientListScope()`. Раскраска и панель фильтров включены только у `t_analysis/list`. См. [patients.md](patients.md).
+`analysisGridQuery()` — JOIN и `addSelect` грида заявок (код пациента, ФИО, дубль, регионы, мнемоники `status_color` и `test_color`). Туда же SQL фильтров виртуальных столбцов, фамилий, unix-дат материала, экспресса (`stat_express`) и просрочки (`view_late` 1 и 2). Один и тот же запрос у списка `/manager/mant_pacient/` и у паспорта врача. Три чекбокса показывает только список. Фильтр по роли в метод не входит: его задаёт `pacientListScope()`. Раскраска и панель фильтров включены только у `t_analysis/list`. См. [patients.md](patients.md).
 
 `pacientListScope()` — кнопка «Добавить пациента», WHERE списка по роли и флаг `doctor` (последняя роль — врач: на телефоне карточки `t_analysis/doctor-mobile`). `denyReason()` — кто открывает одну заявку: паспорт, PDF и тот же просмотр дальше. Врач проходит только если `t_analysis.user_doctor` равен id учётки. Спонсор и спонсор-аудит не проходят. Лаборатория, администратор и суперадмин проходят. Отказ — `VIEW_DENIED`. Это не фильтр списка: в списке спонсор строки видит. `unfinishedCodeDraftGuid()` — заявка, где код уже потрачен, а пациент ещё не записан. `routeLabId()` — лаборатория новой заявки из маршрута врача, для PTEN без маршрута лаборатория 3. `pacientFormUrl()` — `/manager/pacient/` и тот же адрес с GUID. `addPacientButtonHtml()` — разметка «Добавить пациента»: на десктопе её вставляет `toolbar_left` списка, на телефоне страница ставит её над гридом.
 
 `CodeService::findIdleCode()` / `activate()` — проверка и трата кода на старте заявки. `date_activate` пишется unix-числом.
 
 ## История логики
+
+### 2026-10-21 — отчёт пишется потоком
+
+- **Тип:** правка неверной логики
+- **Было:** `AnalysisReportExporter` собирал лист через `Core\Excel` и на полном архиве упирался в память
+- **Стало:** файл пишет `AnalysisReportSheet`, строка уходит на диск. См. [analysis-reports.md](analysis-reports.md)
+
+### 2026-10-21 — фильтры экспресса и просрочки
+
+- **Тип:** новая логика
+- **Было:** `analysisGridQuery()` не резал список по `stat_express` и `view_late`
+- **Стало:** ключи `filter_express`, `filter_late_delivery`, `filter_late_analysis`. Экран — [patients.md](patients.md)
 
 ### 2026-10-21 — отчёты заявок
 

@@ -12,10 +12,10 @@ use Helpers\Page;
 /**
  * Легаси project/logic/index.php: шаблон адреса → страница каталога и параметр из URL.
  * Включены вход в кабинет (/manager/), паспорт врача, форма пациента
- * (/manager/pacient/ без GUID и /manager/pacient/{guid}/), паспорт анализа
- * /manager/passport/{guid}/. PDF /pdf/{guid}/ каталог не читает: это печать, не страница.
+ * (/manager/pacient/ без GUID и /manager/pacient/{guid}/), форма лаборатории
+ * /manager/analysis/{guid}/, паспорт анализа /manager/passport/{guid}/.
+ * PDF /pdf/{guid}/ каталог не читает: это печать, не страница.
  * /report/pacient/ отдаёт готовый xlsx, тоже без каталога.
- * Форма лаборатории — plannedGuidRoutes(), match() её не отдаёт.
  */
 class LegacyUrlStrategy implements RouteStrategy
 {
@@ -43,6 +43,11 @@ class LegacyUrlStrategy implements RouteStrategy
             return $report;
         }
 
+        $lab = $this->matchAnalysis($urlParts, $repository);
+        if ($lab !== null) {
+            return $lab;
+        }
+
         $passport = $this->matchPassport($urlParts, $repository);
         if ($passport !== null) {
             return $passport;
@@ -52,21 +57,37 @@ class LegacyUrlStrategy implements RouteStrategy
     }
 
     /**
-     * Намечено, не включено. GUID — колонка t_analysis.varc_guid.
+     * GUID-адреса, которые match() ещё не отдаёт. Форма лаборатории уже в matchAnalysis().
      *
      * @return list<array{url:string, page:int, php:string, param:string, note:string}>
      */
     public static function plannedGuidRoutes(): array
     {
-        return [
-            [
-                'url' => '/manager/analysis/{guid}/',
-                'page' => Page::ANALYSIS,
-                'php' => 'form/analysis.php',
-                'param' => 'analysis_guid',
-                'note' => 'Форма анализа, заполняет лаборатория',
-            ],
-        ];
+        return [];
+    }
+
+    private function matchAnalysis(array $urlParts, PageRepository $repository): ?RouteMatch
+    {
+        if (count($urlParts) !== 3 || $urlParts[0] !== 'manager' || $urlParts[1] !== 'analysis') {
+            return null;
+        }
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $urlParts[2]) !== 1) {
+            return null;
+        }
+
+        $manager = $repository->findBySlug('manager');
+        if (!$manager || !$manager->isActive()) {
+            return null;
+        }
+
+        $page = $repository->findBySlug('analysis', $manager->id);
+        if (!$page || $page->id !== Page::ANALYSIS) {
+            return null;
+        }
+
+        $attributes = ['analysis_guid' => strtolower($urlParts[2])];
+
+        return new RouteMatch([$manager, $page], $page, $attributes, $attributes);
     }
 
     private function redirectToPacientList(): RouteMatch

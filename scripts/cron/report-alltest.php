@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * Готовые Excel-отчёты по заявкам: архив до 1 января 2026 и актуальный срез.
- * Файлы: runtime/cache/reports.
+ * xlsx пишется потоком, книга в памяти не собирается. Файлы: runtime/cache/reports.
  *
  * php project/scripts/cron/report-alltest.php
  */

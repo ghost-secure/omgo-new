@@ -12,7 +12,9 @@ use Services\CodeService;
 /**
  * Легаси `project/logic/aftersave/t_analysis.php`.
  * op[step]=code — ввод проверочного кода.
- * op[step]=card — карточка черновика (пациент, диагноз, материалы). Форма лаборатории сюда ещё не входит.
+ * op[step]=card — карточка черновика (пациент, диагноз, материалы).
+ * op[step]=analysis — форма лаборатории. Колонки пишет ядро, этот шаг оставляет только поля формы,
+ * ставит статус «в работе» и дописывает онкогенные варианты.
  */
 class TAnalysisHook
 {
@@ -24,6 +26,10 @@ class TAnalysisHook
     {
         if ($this->isCardStep($context)) {
             $this->prepareCard($dataToSave, $context);
+            return;
+        }
+        if ($this->isAnalysisStep($context)) {
+            $this->prepareAnalysis($dataToSave, $context);
             return;
         }
         if (!$this->isCodeStep($context)) {
@@ -86,6 +92,10 @@ class TAnalysisHook
     {
         if ($this->isCardStep($context)) {
             $this->finishCard($record, $context, $formApiResponse);
+            return;
+        }
+        if ($this->isAnalysisStep($context)) {
+            $this->finishAnalysis($record, $context, $formApiResponse);
             return;
         }
         if (!$this->isCodeStep($context)) {
@@ -182,6 +192,74 @@ class TAnalysisHook
             $formApiResponse['redirect'] = AnalysisService::passportUrl($guid);
             $formApiResponse['message'] = 'Анкета перешла в статус черновик.';
         }
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    /**
+     * @param array<string, mixed> $dataToSave
+     * @param array<string, mixed> $context
+     */
+    private function prepareAnalysis(array &$dataToSave, array $context): void
+    {
+        $id = (int) ($context['id'] ?? 0);
+        if ($id <= 0) {
+            throw new \RuntimeException('Форма анализа сохраняется только у уже созданной заявки');
+        }
+
+        $auth = function_exists('auth') ? auth() : null;
+        $user = $auth ? $auth->getUser() : null;
+        if (!is_array($user)) {
+            throw new \RuntimeException(AnalysisService::VIEW_DENIED);
+        }
+
+        $raw = is_array($context['rawFields'] ?? null) ? $context['rawFields'] : [];
+        Container::getInstance()->get(AnalysisService::class)->prepareLabSave($dataToSave, $raw, $id, $user);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     * @param array<string, mixed>|null $formApiResponse
+     */
+    private function finishAnalysis($record, array $context, ?array &$formApiResponse): void
+    {
+        $attrs = $this->recordAttributes($record);
+        $phase = (string) ($context['__phase'] ?? '');
+        $analysis = Container::getInstance()->get(AnalysisService::class);
+        $raw = is_array($context['rawFields'] ?? null) ? $context['rawFields'] : [];
+        $id = (int) ($attrs['cat'] ?? 0);
+
+        if ($phase === 'record_saved') {
+            $analysis->storeLabOnko($id, $raw);
+            return;
+        }
+
+        if ($phase === 'form_api_success' && is_array($formApiResponse)) {
+            $row = $id > 0 ? $analysis->findAnalysis($id) : null;
+            $guid = trim((string) ($row['varc_guid'] ?? $attrs['varc_guid'] ?? ''));
+            $parentId = (int) ($row['cnt_analysislinked'] ?? 0);
+            if ($parentId > 0) {
+                $parent = $analysis->findAnalysis($parentId);
+                $parentGuid = trim((string) ($parent['varc_guid'] ?? ''));
+                if ($parentGuid !== '') {
+                    $guid = $parentGuid;
+                }
+            }
+            if ($guid === '') {
+                throw new \RuntimeException('Ошибка сохранения анализа');
+            }
+            $formApiResponse['redirect'] = AnalysisService::passportUrl($guid);
+            $formApiResponse['message'] = 'Пожалуйста, проверьте заключение. Если все в порядке, нажмите кнопку Завершить анализ. До этого момента карточка анализа доступна для редактирования, а врач не видит заключение.';
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function isAnalysisStep(array $context): bool
+    {
+        return $this->operationStep($context) === 'analysis';
     }
 
     /**

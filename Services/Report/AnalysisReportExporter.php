@@ -3,7 +3,6 @@
 namespace Services\Report;
 
 use Core\Database\QueryBuilder;
-use Core\Excel\Excel;
 
 /**
  * Сборка xlsx по всем заявкам. Легаси: cron/reglament/report-alltest-new.php.
@@ -127,13 +126,12 @@ class AnalysisReportExporter
         $offset = 0;
         $page = 0;
         $written = 0;
-        $exporter = null;
+        $sheet = null;
         $code = (string) $filter['code'];
         unset($filter['code']);
 
         try {
             $titles = AnalysisReportColumns::titles($code);
-            $columnCount = count($titles);
             while (true) {
                 $rows = $this->query->rows($code, $filter, self::PAGE, $offset);
                 $page++;
@@ -143,19 +141,17 @@ class AnalysisReportExporter
                     }
                     break;
                 }
-                if ($exporter === null) {
-                    $exporter = $this->openSheet($titles, $columnCount);
+                if ($sheet === null) {
+                    $sheet = $this->openSheet($titles, $path);
                     echo 'START: ' . $option . ' / ' . $segment . "\n";
                 }
                 foreach ($rows as $row) {
-                    $exporter->addRow(20);
-                    $written++;
+                    $line = [];
                     foreach ($this->query->cells($code, $row) as $cell) {
-                        if ($cell === '') {
-                            $cell = '-';
-                        }
-                        $exporter->addCell($cell, ['left'], null, 'string');
+                        $line[] = ($cell === '' || $cell === null) ? '-' : (string) $cell;
                     }
+                    $sheet->data($line);
+                    $written++;
                 }
                 echo ' └ page: ' . $page . ' / rows ' . $written . "\n";
                 if (count($rows) < self::PAGE) {
@@ -168,18 +164,20 @@ class AnalysisReportExporter
                 }
             }
 
-            if ($exporter === null) {
+            if ($sheet === null) {
                 return $this->result($option, $segment, $path, 'ok', $started, 0);
             }
 
-            $exporter->setfreezePane('A3');
-            $exporter->saveToFile($path);
-            unset($exporter);
+            $sheet->finish();
+            $sheet = null;
             gc_collect_cycles();
             echo '└ Saved: ' . basename($path) . ' / rows ' . $written . "\n";
 
             return $this->result($option, $segment, $path, 'ok', $started, $written);
         } catch (\Throwable $e) {
+            if ($sheet !== null) {
+                $sheet->abort();
+            }
             echo 'ERROR: ' . $option . ' / ' . $segment . ' / ' . $e->getMessage() . "\n";
 
             return $this->result($option, $segment, $path, 'error', $started, $written, $e->getMessage());
@@ -189,42 +187,19 @@ class AnalysisReportExporter
     /**
      * @param list<string> $titles
      */
-    private function openSheet(array $titles, int $columnCount): Excel
+    private function openSheet(array $titles, string $path): AnalysisReportSheet
     {
-        $exporter = new Excel();
-        $exporter->addStyle('header', [
-            'align' => 'center',
-            'valign' => 'middle',
-            'bold' => true,
-            'wrap' => true,
-            'size' => 16,
-        ]);
-        $exporter->addStyle('tableheader', [
-            'align' => 'center',
-            'valign' => 'middle',
-            'bold' => true,
-            'border' => 'thick',
-            'wrap' => true,
-        ]);
-        $exporter->addStyle('left', [
-            'align' => 'left',
-        ]);
-        $exporter->addRow(30)->addCell('Отчет по всем пациентам на дату ' . date('d.m.Y H:i:s'), 'header', null);
-        $exporter->merge(
-            $exporter->getColLetter(0) . $exporter->getRow(),
-            $exporter->getColLetter(10) . $exporter->getRow()
-        );
-        $exporter->addRow();
-        $exporter->setDefaultWidth(10);
-        $exporter->renameSheet('Все пациенты');
-        foreach ($titles as $title) {
-            $exporter->addCell($title, 'tableheader');
-        }
-        if ($columnCount > 0) {
-            $exporter->addFilter(0, $columnCount - 1, 0);
+        $sheet = new AnalysisReportSheet($path);
+        try {
+            $sheet->begin(count($titles));
+            $sheet->title('Отчет по всем пациентам на дату ' . date('d.m.Y H:i:s'));
+            $sheet->header($titles);
+        } catch (\Throwable $e) {
+            $sheet->abort();
+            throw $e;
         }
 
-        return $exporter;
+        return $sheet;
     }
 
     /**

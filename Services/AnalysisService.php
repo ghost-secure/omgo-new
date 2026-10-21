@@ -2,6 +2,7 @@
 
 namespace Services;
 
+use Core\Auth\UserAccount;
 use Core\Database\QueryBuilder;
 use Core\Reference\TableMetadataManager;
 use Helpers\Crypt;
@@ -16,6 +17,7 @@ class AnalysisService
     public const TBL_ROUTE = 't_analysis_route';
     public const TBL_PACIENT = 't_pacient';
     public const TBL_ANAMNES = 't_analysis_anamnes';
+    public const TBL_ONKO = 't_analysis_onko';
     public const TBL_COMM = 't_comm';
 
     /** Диагнозы, которые легаси фиксирует в карточке. */
@@ -84,6 +86,15 @@ class AnalysisService
     /** Легаси `Analysis::PTEN_EXPRESSION_*`: текст результата ИГХ. */
     public const PTEN_EXPRESSION_LOSS = 'Выпадение экспрессии белка PTEN ОБНАРУЖЕНО';
     public const PTEN_EXPRESSION_PRESENT = 'Выпадение экспрессии белка PTEN НЕ ОБНАРУЖЕНО';
+    public const PTEN_NO_ASSESSMENT = 'Не удалось произвести оценку';
+
+    /** Легаси `Analysis::METHOD_NGS`. BRCA и AKT на форме лаборатории не меняют метод. */
+    public const METHOD_NGS = 1;
+
+    /** Легаси `Analysis::MATERIAL_*`. Пишутся в `multiselect_materialexec` через запятую. */
+    public const MATERIAL_GISTO = 1;
+    public const MATERIAL_BLOOD = 2;
+    public const MATERIAL_NORMA = 3;
 
     /** Страница ввода кода и карточки: `/manager/pacient/` и `/manager/pacient/{guid}/`. */
     public const PACIENT_FORM_URL = '/manager/pacient/';
@@ -163,6 +174,12 @@ class AnalysisService
 
         return $out;
     }
+
+    /** t_late_filter.cat: срок доставки превышен. Пишет крон в t_analysis.view_late. */
+    public const LATE_DELIVERY = 1;
+
+    /** t_late_filter.cat: срок проведения анализа превышен. */
+    public const LATE_ANALYSIS = 2;
 
     /** Мнемоники фона строки: var(--color-bg-*). Совпадают с легаси uikit. */
     public const ROW_BG_TOKENS = ['green', 'blue', 'yellow', 'red', 'lgrey'];
@@ -285,6 +302,18 @@ END';
                     'where' => '{cond}',
                     'column_sql' => 't_analysis.date_execauto',
                     'compare' => 'unix',
+                ],
+                'filter_express' => [
+                    'where' => '{cond}',
+                    'column_sql' => 't_analysis.stat_express',
+                ],
+                'filter_late_delivery' => [
+                    'where' => '(t_analysis.view_late = ' . self::LATE_DELIVERY . ' AND {cond})',
+                    'column_sql' => '1',
+                ],
+                'filter_late_analysis' => [
+                    'where' => '(t_analysis.view_late = ' . self::LATE_ANALYSIS . ' AND {cond})',
+                    'column_sql' => '1',
                 ],
             ],
         ];
@@ -787,6 +816,300 @@ END';
     }
 
     /**
+     * Форму лаборатории открывают на статусах «материал пригоден», «не пригоден, делаем NGS» и «в работе».
+     * Лаборатория — только свою заявку. Администратор и суперадмин — любую на этих статусах.
+     *
+     * @param array<string, mixed>|null $user
+     * @param array<string, mixed> $analysis
+     */
+    public function labFormDeny(?array $user, array $analysis): ?string
+    {
+        if ($user === null) {
+            return self::VIEW_DENIED;
+        }
+
+        $roles = is_array($user['roles_map'] ?? null) ? $user['roles_map'] : [];
+        $profile = is_array($user['profile'] ?? null) ? $user['profile'] : [];
+        $super = (int) ($user['role'] ?? 0) === UserAccount::SUPERUSER;
+        $admin = array_key_exists(RoleService::ROLE_ADMIN, $roles);
+        $labId = (int) ($profile['view_lab'] ?? 0);
+        $ownLab = array_key_exists(RoleService::ROLE_LAB, $roles)
+            && $labId > 0
+            && $labId === (int) ($analysis['view_lab'] ?? 0);
+        if (!$super && !$admin && !$ownLab) {
+            return self::VIEW_DENIED;
+        }
+
+        $status = (int) ($analysis['view_status'] ?? 0);
+        $open = [
+            self::STATUS_ACCEPTABLE,
+            self::STATUS_REJECTED_BADMATERIALNGS,
+            self::STATUS_WORK,
+        ];
+        if (!in_array($status, $open, true)) {
+            return 'Форма анализа на этом статусе недоступна.';
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function reagents(int $typeId): array
+    {
+        if ($typeId <= 0) {
+            return [];
+        }
+
+        $rows = $this->db->reset()
+            ->select(['cat', 'varc_name AS name'])
+            ->from('t_reagent')
+            ->where('FIND_IN_SET(?, multiselect_analiztype)', [$typeId])
+            ->order(['cat' => 'ASC'])
+            ->get();
+
+        return $this->optionMap($rows);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function onkoClasses(): array
+    {
+        $rows = $this->db->reset()
+            ->select(['cat', 'varc_name AS name'])
+            ->from('t_ontoclass')
+            ->order(['cat' => 'ASC'])
+            ->get();
+
+        return $this->optionMap($rows);
+    }
+
+    public function userFio(int $userId): string
+    {
+        if ($userId <= 0) {
+            return '';
+        }
+
+        $row = $this->db->reset()
+            ->select(["TRIM(CONCAT(COALESCE(varc_surname,''), ' ', COALESCE(varc_name,''), ' ', COALESCE(varc_patron,''))) AS name"])
+            ->from('t_users')
+            ->where(['cat' => $userId])
+            ->limit(1)
+            ->getOne();
+
+        return trim((string) ($row->name ?? ''));
+    }
+
+    /**
+     * Тексты заключения лаборатории, если в заявке поле ещё пустое.
+     *
+     * @return array{txt_gencomment: string, txt_gen: string, txt_limit: string, txt_metodica: string}
+     */
+    public function conclusionDefaults(int $labId, int $typeId): array
+    {
+        $empty = [
+            'txt_gencomment' => '',
+            'txt_gen' => '',
+            'txt_limit' => '',
+            'txt_metodica' => '',
+        ];
+        if ($labId <= 0 || $typeId <= 0) {
+            return $empty;
+        }
+
+        $row = $this->db->reset()
+            ->select(['txt_gencomment', 'txt_gen', 'txt_limit', 'txt_metodica'])
+            ->from('t_lab_metodic')
+            ->where([
+                'view_lab' => $labId,
+                'view_analiztype' => $typeId,
+            ])
+            ->limit(1)
+            ->getOne();
+        if (!$row) {
+            return $empty;
+        }
+
+        $item = (array) $row;
+        foreach ($empty as $column => $value) {
+            $empty[$column] = trim((string) ($item[$column] ?? ''));
+        }
+
+        return $empty;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function onkoRows(int $analysisId): array
+    {
+        if ($analysisId <= 0) {
+            return [];
+        }
+
+        $rows = $this->db->reset()
+            ->select(['*'])
+            ->from(self::TBL_ONKO)
+            ->where(['view_analysis' => $analysisId])
+            ->order(['cat' => 'ASC'])
+            ->get();
+
+        return array_map(static fn ($row) => (array) $row, $rows ?: []);
+    }
+
+    /**
+     * Легаси `aftersave/t_analysis.php`, ветка `$form->analysis`.
+     * В сохранение попадают только поля этой формы. Статус становится «в работе».
+     *
+     * @param array<string, mixed> $dataToSave
+     * @param array<string, mixed> $raw
+     * @param array<string, mixed> $user
+     */
+    public function prepareLabSave(array &$dataToSave, array $raw, int $analysisId, array $user): void
+    {
+        $analysis = $this->findAnalysis($analysisId);
+        if ($analysis === null) {
+            throw new \RuntimeException('Заявка не найдена.');
+        }
+        $deny = $this->labFormDeny($user, $analysis);
+        if ($deny !== null) {
+            throw new \RuntimeException($deny);
+        }
+
+        $typeId = (int) ($analysis['view_test'] ?? 0);
+        $slug = $this->typeSlug($typeId);
+        $kept = [];
+
+        $date = trim((string) ($raw['date_accept'] ?? ''));
+        $stamp = strtotime($date . ' 00:00:00');
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || $stamp === false) {
+            throw new \RuntimeException('Укажите дату поступления');
+        }
+        $kept['date_accept'] = $stamp;
+
+        foreach ($this->labTextColumns($slug, $typeId) as $column) {
+            if (!array_key_exists($column, $raw) || is_array($raw[$column])) {
+                continue;
+            }
+            $kept[$column] = $raw[$column];
+        }
+
+        $flags = $this->labMaterialFlags($slug, (int) ($analysis['view_diagnoz'] ?? 0));
+        $marks = [
+            'stat_materialgisto' => ['varc_markgisto', 'номер блока'],
+            'stat_materialblood' => ['varc_markblood', 'маркировку крови'],
+            'stat_materialnormal' => ['varc_marknormal', 'номер блока нормальной ткани'],
+        ];
+        $allowed = [];
+        foreach ($flags as $flag) {
+            $kept[$flag] = !empty($raw[$flag]) ? 1 : 0;
+            [$mark, $title] = $marks[$flag];
+            if ($kept[$flag] === 1) {
+                $value = trim((string) ($raw[$mark] ?? ''));
+                if ($value === '') {
+                    throw new \RuntimeException('Заполните ' . $title);
+                }
+                $kept[$mark] = $value;
+                if ($flag === 'stat_materialgisto') {
+                    $allowed[] = self::MATERIAL_GISTO;
+                } elseif ($flag === 'stat_materialblood') {
+                    $allowed[] = self::MATERIAL_BLOOD;
+                } else {
+                    $allowed[] = self::MATERIAL_NORMA;
+                }
+            } else {
+                $kept[$mark] = '';
+            }
+        }
+
+        if ($typeId !== self::TYPE_MLPA) {
+            $materials = array_values(array_intersect($this->postedMaterials($raw), $allowed));
+            if ($materials === []) {
+                throw new \RuntimeException('Выберите хотя бы один материал, который пойдет в заключение');
+            }
+            $kept['multiselect_materialexec'] = implode(',', $materials);
+        }
+
+        if (in_array($slug, ['brca', 'akt'], true)) {
+            $kept['view_method'] = self::METHOD_NGS;
+        } elseif ($slug === 'hrd' && (int) ($kept['view_method'] ?? 0) <= 0) {
+            throw new \RuntimeException('Укажите метод анализа');
+        }
+
+        if ($slug === 'hrd' && $typeId === self::TYPE_HRD) {
+            $kept['stat_genom'] = !empty($raw['stat_genom']) ? 1 : 0;
+            if ((int) ($kept['view_hrd'] ?? 0) <= 0) {
+                throw new \RuntimeException('Укажите статус HRD');
+            }
+        }
+
+        if ($slug === 'akt') {
+            $kept['stat_patogen'] = !empty($raw['stat_patogen']) ? 1 : 0;
+            $kept['stat_onkogen'] = !empty($raw['stat_onkogen']) ? 1 : 0;
+        }
+
+        $this->assertLabResult($slug, $kept, $raw);
+        $kept['view_status'] = self::STATUS_WORK;
+
+        foreach ($kept as $column => $value) {
+            $kept[$column] = $this->cardScalar($column, $value);
+        }
+        $kept['date_accept'] = $stamp;
+        if (isset($kept['multiselect_materialexec'])) {
+            $kept['multiselect_materialexec'] = implode(',', $materials ?? []);
+        }
+
+        $dataToSave = $kept;
+    }
+
+    /**
+     * Онкогенные варианты AKT пишутся после строки анализа.
+     *
+     * @param array<string, mixed> $raw
+     */
+    public function storeLabOnko(int $analysisId, array $raw): void
+    {
+        if ($analysisId <= 0 || !array_key_exists('onko', $raw)) {
+            return;
+        }
+
+        $this->db->reset()->execute(
+            'DELETE FROM ' . self::TBL_ONKO . ' WHERE view_analysis = ?',
+            [$analysisId]
+        );
+
+        $onko = is_array($raw['onko']) ? $raw['onko'] : [];
+        $variants = is_array($onko['varc_variant'] ?? null) ? $onko['varc_variant'] : [];
+        $alleles = is_array($onko['varc_allel'] ?? null) ? $onko['varc_allel'] : [];
+        $depths = is_array($onko['cnt_vardepth'] ?? null) ? $onko['cnt_vardepth'] : [];
+        $classes = is_array($onko['view_onko'] ?? null) ? $onko['view_onko'] : [];
+        $metadata = new TableMetadataManager();
+        foreach ($variants as $index => $variant) {
+            $name = trim((string) $variant);
+            if ($name === '') {
+                continue;
+            }
+            $classId = (int) ($classes[$index] ?? 0);
+            if ($classId <= 0) {
+                throw new \RuntimeException('Ошибка сохранения анализа [#0009]');
+            }
+            $depth = $depths[$index] ?? 0;
+            $record = $metadata->createActiveRecord(self::TBL_ONKO, [
+                'view_analysis' => $analysisId,
+                'varc_variant' => $name,
+                'varc_allel' => trim((string) ($alleles[$index] ?? '')),
+                'cnt_vardepth' => is_numeric($depth) ? (int) $depth : 0,
+                'view_onko' => $classId,
+            ]);
+            if (!$record->save()) {
+                throw new \RuntimeException('Ошибка сохранения анализа [#0009]');
+            }
+        }
+    }
+
+    /**
      * Варианты справочника для столбца t_analysis (table_ext / column_ext).
      *
      * @return array<int, string>
@@ -1063,6 +1386,167 @@ END';
             'slug' => $this->typeSlug($typeId),
             'type_name' => $this->typeName($typeId),
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function labMaterialFlags(string $slug, int $diagnoz): array
+    {
+        return match ($slug) {
+            'brca' => $diagnoz === self::DI_YAR
+                ? ['stat_materialgisto', 'stat_materialblood']
+                : ['stat_materialblood'],
+            'hrd', 'hrr' => ['stat_materialgisto', 'stat_materialblood'],
+            'akt' => ['stat_materialgisto', 'stat_materialblood', 'stat_materialnormal'],
+            'pten' => ['stat_materialgisto'],
+            default => [],
+        };
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function labTextColumns(string $slug, int $typeId): array
+    {
+        $texts = ['txt_gen', 'txt_limit', 'txt_metodica', 'txt_conclusion'];
+
+        return match ($slug) {
+            'brca' => array_merge($texts, [
+                'view_method', 'view_reagent', 'view_result',
+                'varc_variant', 'varc_allel', 'cnt_vardepth', 'view_patogen', 'cnt_readdepth',
+            ]),
+            'hrd' => array_merge($texts, [
+                'view_method', 'view_reagent', 'view_result',
+                'varc_variant', 'varc_allel', 'cnt_vardepth', 'view_patogen', 'txt_gencomment',
+                'cnt_snpdepth', 'cnt_brcadepth',
+            ], $typeId === self::TYPE_HRD ? ['cnt_genom', 'view_hrd'] : []),
+            'akt' => array_merge($texts, [
+                'view_method', 'view_reagent', 'view_result',
+                'varc_variant', 'varc_allel', 'cnt_vardepth', 'view_patogen', 'cnt_readdepth',
+            ]),
+            'pten' => array_merge($texts, [
+                'varc_result', 'cnt_noexpression', 'varc_antitelo', 'varc_noresultreason',
+            ]),
+            'mlpa' => array_merge($texts, ['stat_copiynost', 'varc_ecozone', 'varc_coords']),
+            default => $texts,
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $raw
+     * @return list<int>
+     */
+    private function postedMaterials(array $raw): array
+    {
+        $ids = [];
+        $multi = $raw['multiselect_materialexec'] ?? null;
+        if (is_array($multi)) {
+            foreach ($multi as $item) {
+                $id = (int) $item;
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        } elseif (is_string($multi) && $multi !== '') {
+            foreach (explode(',', $multi) as $part) {
+                $id = (int) trim($part);
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+        $radio = (int) ($raw['view_materialexec'] ?? 0);
+        if ($radio > 0) {
+            $ids[] = $radio;
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * @param array<string, mixed> $kept
+     * @param array<string, mixed> $raw
+     */
+    private function assertLabResult(string $slug, array &$kept, array $raw): void
+    {
+        $result = (int) ($kept['view_result'] ?? 0);
+        $needsVariant = false;
+        if ($slug === 'brca') {
+            if (!in_array($result, [1, 2, 3], true)) {
+                throw new \RuntimeException('Укажите результат анализа');
+            }
+            $needsVariant = $result === 1;
+        }
+        if ($slug === 'akt') {
+            if (!in_array($result, [1, 2, 3], true)) {
+                throw new \RuntimeException('Укажите результат анализа');
+            }
+            $needsVariant = $result === 1 && (int) ($kept['stat_patogen'] ?? 0) === 1;
+        }
+        if ($slug === 'hrd') {
+            if ($result <= 0) {
+                throw new \RuntimeException('Укажите мутационный статус');
+            }
+            $needsVariant = !in_array($result, [2, 3], true);
+            if ($needsVariant && trim((string) ($kept['txt_gencomment'] ?? '')) === '') {
+                throw new \RuntimeException('Заполните комментарий генетика');
+            }
+        }
+        if ($needsVariant) {
+            if (trim((string) ($kept['varc_variant'] ?? '')) === '' || (int) ($kept['view_patogen'] ?? 0) <= 0) {
+                throw new \RuntimeException('Заполните все обязательные поля');
+            }
+        }
+        if ($slug === 'mlpa') {
+            $copy = (int) ($raw['stat_copiynost'] ?? 0);
+            if ($copy !== 1 && $copy !== 2) {
+                throw new \RuntimeException('Укажите изменение копийности');
+            }
+            $kept['stat_copiynost'] = $copy;
+        }
+        if ($slug !== 'pten') {
+            return;
+        }
+
+        $text = trim((string) ($raw['varc_result'] ?? ''));
+        $known = [self::PTEN_EXPRESSION_LOSS, self::PTEN_EXPRESSION_PRESENT, self::PTEN_NO_ASSESSMENT];
+        if (!in_array($text, $known, true)) {
+            throw new \RuntimeException('Укажите результат ИГХ исследования');
+        }
+        $kept['varc_result'] = $text;
+        if ($text === self::PTEN_NO_ASSESSMENT) {
+            $reason = trim((string) ($raw['varc_noresultreason'] ?? ''));
+            if ($reason === '') {
+                throw new \RuntimeException('Укажите причину невозможности оценки');
+            }
+            $kept['varc_noresultreason'] = $reason;
+            $kept['cnt_noexpression'] = 0;
+            $kept['varc_antitelo'] = '';
+
+            return;
+        }
+
+        $percent = trim((string) ($raw['cnt_noexpression'] ?? ''));
+        if ($percent === '' || !is_numeric($percent)) {
+            throw new \RuntimeException('Укажите процент клеток с отсутствием экспрессии');
+        }
+        $kept['cnt_noexpression'] = (int) $percent;
+        $kept['varc_noresultreason'] = '';
+        $picked = trim((string) ($raw['varc_antitelo'] ?? ''));
+        $custom = trim((string) ($raw['antitelo_value'] ?? ''));
+        if ($picked === 'Другое') {
+            if ($custom === '') {
+                throw new \RuntimeException('Укажите свой вариант антитела');
+            }
+            $kept['varc_antitelo'] = $custom;
+
+            return;
+        }
+        if ($picked === '') {
+            throw new \RuntimeException('Укажите используемое антитело');
+        }
+        $kept['varc_antitelo'] = $picked;
     }
 
     /**

@@ -14,6 +14,7 @@
             section.dataset.omgoGridChrome = '1';
             this.bindFilterToggle(section);
             this.splitFilters(section);
+            this.bindFilterBadge(section);
             return this;
         }
 
@@ -82,9 +83,6 @@
                 return;
             }
 
-            if (hasValue && button) {
-                button.classList.add('is-extended-active');
-            }
             row.after(extended);
             this.placeFilterFooter(filters);
             filters.classList.add('block-expander');
@@ -121,6 +119,49 @@
             if (icon && window.IconSystem && typeof window.IconSystem.replaceIcon === 'function') {
                 window.IconSystem.replaceIcon(icon);
             }
+        }
+
+        bindFilterBadge(section) {
+            const filters = section.querySelector('.dynblock-filters');
+            const button = section.querySelector('.dynblock-filters-toolbar-toggle');
+            if (!filters || !button || filters.dataset.filterBadge === '1') {
+                return;
+            }
+            filters.dataset.filterBadge = '1';
+            const paint = () => this.paintFilterBadge(section);
+            filters.addEventListener('input', paint);
+            filters.addEventListener('change', paint);
+            paint();
+        }
+
+        paintFilterBadge(section) {
+            const button = section.querySelector('.dynblock-filters-toolbar-toggle');
+            const filters = section.querySelector('.dynblock-filters');
+            if (!button || !filters) {
+                return;
+            }
+            let count = 0;
+            filters.querySelectorAll('.filter-item').forEach((item) => {
+                if (this.fieldHasValue(item)) {
+                    count += 1;
+                }
+            });
+            let badge = button.querySelector('.filter-active-badge');
+            if (count === 0) {
+                if (badge) {
+                    badge.remove();
+                }
+                button.setAttribute('aria-label', 'Фильтры');
+                return;
+            }
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'filter-active-badge';
+                badge.setAttribute('aria-hidden', 'true');
+                button.appendChild(badge);
+            }
+            badge.textContent = String(count);
+            button.setAttribute('aria-label', 'Фильтры, выбрано ' + count);
         }
 
         columnOf(item) {

@@ -406,14 +406,14 @@
                     text = Object.values(data.errors).join(' ');
                 }
                 if (errorText) {
-                    errorText.textContent = text || 'Не удалось сохранить карточку';
+                    errorText.textContent = text || this.saveError();
                 }
                 if (errorBox) {
                     errorBox.hidden = false;
                 }
             } catch (err) {
                 if (errorText) {
-                    errorText.textContent = 'Не удалось сохранить карточку';
+                    errorText.textContent = this.saveError();
                 }
                 if (errorBox) {
                     errorBox.hidden = false;
@@ -423,6 +423,11 @@
                     button.disabled = false;
                 }
             }
+        }
+
+        saveError() {
+            const text = this.form.getAttribute('data-save-error');
+            return text && text !== '' ? text : 'Не удалось сохранить карточку';
         }
 
         destroy() {}
